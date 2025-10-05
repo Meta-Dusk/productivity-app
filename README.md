@@ -1,20 +1,40 @@
 # ProductivityApp
 
-This is for people who need an app to monitor whenever they `alt+tab` or just look at other "distracting" windows.
+This is for people who need an app to monitor whenever they `alt + tab` or just look at other _distracting_ windows.
+
+## Preview
+
+Below is what you'd expect from the app:
+
+![productivity app preview](https://github.com/user-attachments/assets/bbb32838-1ad1-43ff-a99e-27c6270f4ebe)
 
 ## Features
 
-| Feature | Description |
-| -------- | -------- |
-| **Window Check** | The app will check if look at "distracting" apps by checking the name of the executable. |
-| **Times Distracted Counter** | Everytime you look at "distracting" apps, it will increment this counter. |
-| **Customizable Keyword List** | You can add your own custom keywords to detect when using the app. |
+| Feature | Description | Implementation |
+| -------- | -------- | -------- |
+| **Window Check** | The app will check if look at "distracting" apps by checking the name of the executable. | Since version `0.1.1` |
+| **Times Distracted Counter** | Everytime you look at "distracting" apps, it will increment this counter. | Since version `0.1.1` |
+| **Customizable Keyword List** | You can add your own custom keywords to detect when using the app. | Since version `0.2.0` |
 
 ## Usage
 
-Simply open the executable, and the app will immediately check if you're *slacking off*.
+Simply open the executable, and the app will immediately check if you're *slacking off*. If it detects that you're not being productive, it will be sent to the front, if it's being hidden behind other windows.
 
-## Issues and Fixes
+## Safety Concerns
+
+**Yes, this app is safe**.
+
+> "Are you sure?"
+
+If you're doubting me, you can take a look at the source code, which is literally in this repository. The only things that this app may tamper with your files, is where the config files will be stored. By default, this will be stored in the `./AppData/Roaming/MetaDusk/` directory. If you can't locate it, you can open this folder by doing `win + r` then typing `%appdata%` which will bring you to this exact directory, where you will now just search for the `MetaDusk` directory, which is where the config files will be stored.
+
+The other concern you might have, would be:
+
+> "How does this app detect what app you're looking at?"
+
+Basically, this app works by using a library that only provides the window's names, process ids, and such, which are easily locatable manually as well (mostly for the names). And that's the system that this app uses; it simply checks the currently focused window's name against a list of keywords.
+
+## Known Issues and Fixes
 
 | No. | Issue | Description | Solution | Severity |
 | -------- | -------- | -------- | -------- | -------- |
@@ -25,5 +45,5 @@ Simply open the executable, and the app will immediately check if you're *slacki
 
 | Feature | Description | Progress |
 | -------- | -------- | -------- |
-| Customizable List for Used Keywords in Detection | The user can edit a file to add their own keywords that they wish to detect. | 100% |
-| Sound Effects | A sound effect will play everytime the app catches the user *slacking off*. | 0% |
+| **Customizable List for Used Keywords in Detection** | The user can edit a file to add their own keywords that they wish to detect. | 100% |
+| **Sound Effects** | A sound effect will play everytime the app catches the user *slacking off*. | 0% |
