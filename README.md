@@ -12,3 +12,9 @@ This is for people who need an app to monitor whenever they `alt+tab` or just lo
 ## Usage
 
 Simply open the executable, and the app will immediately check if you're *slacking off*.
+
+## Issues and Fixes
+
+| No. | Issue | Description | Solution | Severity |
+| -------- | -------- | -------- | -------- | -------- |
+| 1. | Stuck on Loading Screen. | This could be because your device is struggling to run the app. | Simply close then open the executable again. | Easily fixed. |
