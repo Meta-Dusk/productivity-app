@@ -1,0 +1,47 @@
+[project]
+name = "ProductivityApp"
+version = "0.1.0"
+description = "An App for Checking Your Productivity"
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [
+  { name = "MetaDusk", email = "andredcxxv@gmail.com" }
+]
+license = { text = "MIT" }
+
+dependencies = [
+  "flet[all]==0.70.0.dev6214",
+  "pip>=25.2",
+  "uiautomation==2.0.29",
+  "psutil==7.1.0",
+]
+
+[tool.flet]
+org = "com.metadusk"
+product = "Test App"
+company = "MetaDusk Inc."
+copyright = "Copyright (C) 2025 MetaDusk"
+compile_app = true
+compile_packages = true
+cleanup_on_compile = true
+build_number = 1
+
+[tool.flet.assets]
+include = [
+  "assets/**"
+]
+
+[tool.flet.splash]
+color = "#ffffff"
+dark_color = "#333333"
+
+[tool.flet.app]
+path = "src"
+
+[tool.flet.app.boot_screen]
+show = true
+message = "Loading... Please wait."
+
+[tool.flet.app.startup_screen]
+show = true
+message = "Loading... Please wait."
