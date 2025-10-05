@@ -1,66 +1,14 @@
 import flet as ft
-import psutil, asyncio
-import uiautomation as auto
+import asyncio, os
 
-from enum import Enum
-from typing import Optional
+from loader import ensure_config_exists, load_app_lists, CONFIG_FILE
+from window import get_active_window_info, classify_window
+from data_types import WindowInfo, AppType
+
 
 # === CONFIG ===
-PRODUCTIVE_APPS = [
-    "code.exe", "pycharm64.exe", "anki.exe", "obsidian.exe",
-    "notepad.exe", "pdfreader.exe", "mspowerpoint.exe"
-]
-DISTRACTING_KEYWORDS = [
-    "youtube", "facebook", "reddit", "twitter", "tiktok", "discord", "netflix"
-]
-
-
-# === TYPE CLASSES ===
-class AppType(Enum):
-    DISTRACTING = "distracting"
-    NEUTRAL = "neutral"
-    PRODUCTIVE = "productive"
-
-class WindowInfo(Enum):
-    NAME = "name"
-    CLASS_NAME = "class_name"
-    PROCESS_ID = "process_id"
-
-
-# === BACKGROUND MONITOR FUNCTION ===
-def get_active_window_info() -> dict[WindowInfo, Optional[str | int]]:
-    """Returns dict with info about the currently focused window."""
-    # Proper COM init for this thread
-    with auto.UIAutomationInitializerInThread():
-        ctrl = auto.GetForegroundControl()
-        if ctrl is None:
-            return {
-                WindowInfo.NAME: None,
-                WindowInfo.CLASS_NAME: None,
-                WindowInfo.PROCESS_ID: 0,
-            }
-        return {
-            WindowInfo.NAME: getattr(ctrl, "Name", None),
-            WindowInfo.CLASS_NAME: getattr(ctrl, "ClassName", None),
-            WindowInfo.PROCESS_ID: getattr(ctrl, "ProcessId", 0),
-        }
-
-def get_process_name(pid: int) -> str:
-    try:
-        return psutil.Process(pid).name()
-    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, ValueError):
-        return "unknown"
-
-def classify_window(win_info: dict[WindowInfo, Optional[str | int]]) -> AppType:
-    title = (win_info.get(WindowInfo.NAME) or "").lower()
-    process = (get_process_name(win_info.get(WindowInfo.PROCESS_ID)) or "").lower()
-    
-    if any(app.lower() in process for app in PRODUCTIVE_APPS):
-        return AppType.PRODUCTIVE
-    elif any(word.lower() in title for word in DISTRACTING_KEYWORDS):
-        return AppType.DISTRACTING
-    else:
-        return AppType.NEUTRAL
+ensure_config_exists()
+productive_apps, distracting_keywords = load_app_lists()
 
 
 # === HELPERS ===
@@ -99,6 +47,9 @@ async def main(page: ft.Page) -> None:
     def minimize(_):
         page.window.minimized = True
     
+    def open_config(_):
+        os.startfile(CONFIG_FILE)
+    
     theme_btn = ft.AnimatedSwitcher(
         content=ft.IconButton(
             icon=ft.Icons.DARK_MODE, on_click=swap_theme,
@@ -115,10 +66,14 @@ async def main(page: ft.Page) -> None:
         icon=ft.Icons.MINIMIZE, icon_color=ft.Colors.PRIMARY,
         on_click=minimize
     )
+    edit_config_btn = ft.IconButton(
+        icon=ft.Icons.EDIT, icon_color=ft.Colors.PRIMARY,
+        on_click=open_config
+    )
     
     page.appbar = ft.AppBar(
         title = "Anti-Slacking Monitor",
-        actions=[minimize_btn, theme_btn, close_btn]
+        actions=[minimize_btn, theme_btn, edit_config_btn, close_btn]
     )
     
     # Initial Setup
@@ -171,7 +126,7 @@ async def main(page: ft.Page) -> None:
         while not stop_event.is_set():
             # Run blocking call in a background thread with COM initialized
             info = await asyncio.to_thread(get_active_window_info)
-            category = classify_window(info)
+            category = classify_window(info, productive_apps, distracting_keywords)
             title = info.get(WindowInfo.NAME) or "Unknown Window"
             
             if category == AppType.DISTRACTING:
