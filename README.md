@@ -19,6 +19,7 @@ Simply open the executable, and the app will immediately check if you're *slacki
 | No. | Issue | Description | Solution | Severity |
 | -------- | -------- | -------- | -------- | -------- |
 | 1. | Stuck on Loading Screen. | This could be because your device is struggling to run the app. | Simply close then open the executable again. | Easily fixed. |
+| 2. | App Window Appears Stretched | This could be a `flet` rendering issue. | Simply restart the app. | Easily fixed. |
 
 ## Future Additions
 
