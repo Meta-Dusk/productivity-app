@@ -64,7 +64,7 @@ def classify_window(win_info: dict[WindowInfo, Optional[str | int]]) -> AppType:
 
 
 # === HELPERS ===
-async def safe_sleep(duration: float, stop_event: asyncio.Event):
+async def safe_sleep(duration: float, stop_event: asyncio.Event) -> None:
     try:
         await asyncio.wait_for(stop_event.wait(), timeout=duration)
     except asyncio.TimeoutError:
@@ -72,7 +72,7 @@ async def safe_sleep(duration: float, stop_event: asyncio.Event):
 
 
 # === MAIN FLET APP ===
-def before_main(page: ft.Page):
+def before_main(page: ft.Page) -> None:
     page.title = "Anti-Slacking Monitor"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
@@ -84,7 +84,7 @@ def before_main(page: ft.Page):
     page.window.always_on_top = False
     page.window.frameless = True
 
-async def main(page: ft.Page):
+async def main(page: ft.Page) -> None:
     # Setting up Appbar
     def swap_theme(_):
         icon_btn: ft.IconButton = theme_btn.content

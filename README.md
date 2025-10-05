@@ -18,3 +18,9 @@ Simply open the executable, and the app will immediately check if you're *slacki
 | No. | Issue | Description | Solution | Severity |
 | -------- | -------- | -------- | -------- | -------- |
 | 1. | Stuck on Loading Screen. | This could be because your device is struggling to run the app. | Simply close then open the executable again. | Easily fixed. |
+
+## Future Additions
+
+| Feature | Description | Progress |
+| -------- | -------- | -------- |
+| Customizable List for Used Keywords in Detection | The user can edit a file to add their own keywords that they wish to detect. | 0% |
