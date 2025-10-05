@@ -1,28 +1,159 @@
-import sys, os
+import sys, os, tempfile
 from pathlib import Path
 from default_config import DEFAULT_CONFIG
 
 APP_NAME = "ProductivityApp"
 
-# Detect base directory (works in both source and packaged form)
+# Detect base directory
 if getattr(sys, "frozen", False):
     BASE_DIR = Path(sys.executable).parent
 else:
     BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Use %APPDATA% (or ~/.config on Unix) for writable config files
-CONFIG_ROOT = Path(os.getenv("APPDATA", BASE_DIR / "config")) / APP_NAME
+# Log file (always write to a safe location)
+_LOG_FILE = Path(tempfile.gettempdir()) / f"{APP_NAME}_loader.log"
+
+def _log(msg: str):
+    try:
+        ts = ""
+        line = f"{msg}\n"
+        # try to print for dev (console may not exist in packaged app)
+        try:
+            print(msg, flush=True)
+        except Exception:
+            pass
+        # append to log file (always safe)
+        with open(_LOG_FILE, "a", encoding="utf-8") as fh:
+            fh.write(line)
+    except Exception:
+        # never crash logging
+        pass
+
+def can_write_to_dir(path: Path) -> bool:
+    """Return True if the process can write to the given directory."""
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+        test_file = path / "_perm_test.tmp"
+        with open(test_file, "w", encoding="utf-8") as f:
+            f.write("test")
+        # try to remove (ignore errors)
+        try:
+            test_file.unlink()
+        except Exception:
+            pass
+        return True
+    except Exception as e:
+        _log(f"can_write_to_dir({path}) failed: {e}")
+        return False
+
+def _choose_writable_root() -> Path:
+    """Pick the best writable config directory (APPDATA -> HOME -> temp)."""
+    # 1) try APPDATA (roaming)
+    try:
+        appdata = os.getenv("APPDATA")
+    except Exception:
+        appdata = None
+
+    candidates = []
+    if appdata:
+        candidates.append(Path(appdata) / "MetaDusk" / APP_NAME / "config")
+    # prefer HOME next
+    candidates.append(Path.home() / ".MetaDusk" / APP_NAME / "config")
+    # final fallback: OS temp
+    candidates.append(Path(tempfile.gettempdir()) / APP_NAME / "config")
+
+    for cand in candidates:
+        try:
+            if can_write_to_dir(cand):
+                _log(f"Selected config root: {cand}")
+                return cand
+        except Exception as e:
+            _log(f"Candidate check failed for {cand}: {e}")
+
+    # as last resort, return the temp path (attempt mkdir, but don't raise)
+    final = Path(tempfile.gettempdir()) / APP_NAME / "config"
+    try:
+        final.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        _log(f"Final mkdir failed for {final}: {e}")
+    return final
+
+# determine CONFIG_ROOT and CONFIG_FILE (globals)
+CONFIG_ROOT = _choose_writable_root()
 CONFIG_FILE = CONFIG_ROOT / "apps.txt"
 
-def ensure_config_exists():
-    """Ensure that the config file exists in a writable location."""
-    CONFIG_ROOT.mkdir(parents=True, exist_ok=True)
-    if not CONFIG_FILE.exists():
-        CONFIG_FILE.write_text(DEFAULT_CONFIG, encoding="utf-8")
-        print(f"🆕 Created default config at: {CONFIG_FILE}")
-    else:
-        print(f"✅ Loaded config from: {CONFIG_FILE}")
+def ensure_config_exists() -> Path:
+    """
+    Ensure that a writable config file exists.
+    Returns the actual path to the config file that was used.
+    This function will never raise an exception (it logs instead).
+    """
+    global CONFIG_ROOT, CONFIG_FILE
 
+    _log(f"ensure_config_exists() start. BASE_DIR={BASE_DIR} CONFIG_ROOT(candidate)={CONFIG_ROOT}")
+
+    # ensure the directory exists (best-effort)
+    try:
+        CONFIG_ROOT.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        _log(f"mkdir failed for {CONFIG_ROOT}: {e}")
+        # try to pick a safer location (HOME)
+        try:
+            alt = Path.home() / ".MetaDusk" / APP_NAME / "config"
+            alt.mkdir(parents=True, exist_ok=True)
+            if can_write_to_dir(alt):
+                CONFIG_ROOT = alt
+                _log(f"Falling back to HOME config root: {CONFIG_ROOT}")
+        except Exception as e2:
+            _log(f"Fallback mkdir failed: {e2}")
+            # fallback to tempdir
+            try:
+                tmp = Path(tempfile.gettempdir()) / APP_NAME / "config"
+                tmp.mkdir(parents=True, exist_ok=True)
+                CONFIG_ROOT = tmp
+                _log(f"Falling back to TEMP config root: {CONFIG_ROOT}")
+            except Exception as e3:
+                _log(f"All mkdir attempts failed: {e3}")
+                # still continue; CONFIG_ROOT may be non-writable but we won't raise
+
+    # update CONFIG_FILE to reflect chosen root
+    CONFIG_FILE = CONFIG_ROOT / "apps.txt"
+
+    # If file doesn't exist, attempt to create it
+    try:
+        if not CONFIG_FILE.exists():
+            CONFIG_FILE.write_text(DEFAULT_CONFIG, encoding="utf-8")
+            _log(f"Created default config at: {CONFIG_FILE}")
+        else:
+            _log(f"Found existing config at: {CONFIG_FILE}")
+    except Exception as e:
+        _log(f"Failed to create or write config at {CONFIG_FILE}: {e}")
+        # try to write a fallback config inside HOME or temp (guaranteed writable)
+        try:
+            fallback = Path.home() / ".MetaDusk" / APP_NAME / "apps.txt"
+            fallback.parent.mkdir(parents=True, exist_ok=True)
+            fallback.write_text(DEFAULT_CONFIG, encoding="utf-8")
+            CONFIG_FILE = fallback
+            CONFIG_ROOT = fallback.parent
+            _log(f"Wrote fallback config at: {fallback}")
+        except Exception as e2:
+            _log(f"Failed to write fallback config at HOME: {e2}")
+            try:
+                fallback2 = Path(tempfile.gettempdir()) / APP_NAME / "apps.txt"
+                fallback2.parent.mkdir(parents=True, exist_ok=True)
+                fallback2.write_text(DEFAULT_CONFIG, encoding="utf-8")
+                CONFIG_FILE = fallback2
+                CONFIG_ROOT = fallback2.parent
+                _log(f"Wrote fallback config at TEMP: {fallback2}")
+            except Exception as e3:
+                _log(f"Failed to write fallback config at TEMP: {e3}")
+                # give up but don't raise; the app should continue with empty lists
+
+    _log(f"ensure_config_exists() complete. Using CONFIG_ROOT={CONFIG_ROOT}, CONFIG_FILE={CONFIG_FILE}")
+    return CONFIG_FILE
+
+
+# --- Load app lists from config ---
 def load_app_lists():
     """Load the productive and distracting lists from the config file."""
     productive, distracting, current_section = [], [], None
@@ -50,11 +181,13 @@ def load_app_lists():
     return productive, distracting
 
 
+# --- Test function (for dev use only) ---
 def test():
     ensure_config_exists()
     PRODUCTIVE_APPS, DISTRACTING_KEYWORDS = load_app_lists()
     print(f"Productive Apps: {PRODUCTIVE_APPS}")
     print(f"Distracting Keywords: {DISTRACTING_KEYWORDS}")
+
 
 if __name__ == "__main__":
     test()
