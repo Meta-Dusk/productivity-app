@@ -30,7 +30,7 @@ build_number = 3
 
 [tool.flet.assets]
 include = [
-  "assets/**"
+  "images/**"
 ]
 
 [tool.flet.splash]

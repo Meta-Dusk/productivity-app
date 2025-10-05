@@ -1,41 +1,22 @@
-import sys
+import sys, os
 from pathlib import Path
+from default_config import DEFAULT_CONFIG
+
+APP_NAME = "ProductivityApp"
 
 # Detect base directory (works in both source and packaged form)
-if getattr(sys, 'frozen', False):
+if getattr(sys, "frozen", False):
     BASE_DIR = Path(sys.executable).parent
 else:
     BASE_DIR = Path(__file__).resolve().parent.parent
 
-CONFIG_DIR = BASE_DIR / "config"
-CONFIG_FILE = CONFIG_DIR / "apps.txt"
-
-DEFAULT_CONFIG = """# ProductivityApp Config
-# Lines starting with "#" are comments
-# Add more items to each list as you like.
-
-[PRODUCTIVE_APPS]
-code.exe
-pycharm64.exe
-anki.exe
-obsidian.exe
-notepad.exe
-pdfreader.exe
-mspowerpoint.exe
-
-[DISTRACTING_KEYWORDS]
-youtube
-facebook
-reddit
-twitter
-tiktok
-discord
-netflix
-"""
+# Use %APPDATA% (or ~/.config on Unix) for writable config files
+CONFIG_ROOT = Path(os.getenv("APPDATA", BASE_DIR / "config")) / APP_NAME
+CONFIG_FILE = CONFIG_ROOT / "apps.txt"
 
 def ensure_config_exists():
-    """Ensure that the config file exists next to the executable."""
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    """Ensure that the config file exists in a writable location."""
+    CONFIG_ROOT.mkdir(parents=True, exist_ok=True)
     if not CONFIG_FILE.exists():
         CONFIG_FILE.write_text(DEFAULT_CONFIG, encoding="utf-8")
         print(f"🆕 Created default config at: {CONFIG_FILE}")
@@ -69,12 +50,11 @@ def load_app_lists():
     return productive, distracting
 
 
-# Example Usage
 def test():
     ensure_config_exists()
     PRODUCTIVE_APPS, DISTRACTING_KEYWORDS = load_app_lists()
     print(f"Productive Apps: {PRODUCTIVE_APPS}")
     print(f"Distracting Keywords: {DISTRACTING_KEYWORDS}")
-    
+
 if __name__ == "__main__":
     test()

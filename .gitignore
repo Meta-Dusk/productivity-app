@@ -161,6 +161,3 @@ cython_debug/
 
 # Flet
 storage/
-
-# Config
-config/
