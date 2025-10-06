@@ -17,6 +17,7 @@ dependencies = [
   "uiautomation==2.0.29",
   "psutil==7.1.0",
   "pywin32>=311",
+  "pyinstaller>=6.16.0",
 ]
 
 [tool.flet]
@@ -27,7 +28,7 @@ copyright = "Copyright (C) 2025 MetaDusk"
 compile_app = true
 compile_packages = true
 cleanup_on_compile = true
-build_number = 2
+build_number = 1
 
 [tool.flet.assets]
 include = [

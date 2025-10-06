@@ -177,7 +177,9 @@ def ensure_config_exists() -> Path:
 
 
 # --- Load app lists from config ---
-# TODO: Fix word detection and add more keyword flexibility
+# TODO: Add more categories for more flexibility
+# Example categories to add:
+# EXACT_MATCH, LOOSE_MATCH
 def load_app_lists():
     """Load the productive and distracting lists from the config file."""
     productive, distracting, current_section = [], [], None
@@ -209,8 +211,8 @@ def load_app_lists():
 def test():
     ensure_config_exists()
     PRODUCTIVE_APPS, DISTRACTING_KEYWORDS = load_app_lists()
-    print(f"Productive Apps: {PRODUCTIVE_APPS}")
-    print(f"Distracting Keywords: {DISTRACTING_KEYWORDS}")
+    print(f"\nProductive Apps: {PRODUCTIVE_APPS}\n")
+    print(f"\nDistracting Keywords: {DISTRACTING_KEYWORDS}\n")
 
 
 if __name__ == "__main__":

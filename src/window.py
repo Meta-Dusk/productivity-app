@@ -47,6 +47,7 @@ def get_process_name(pid: int) -> str:
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, ValueError):
         return "unknown"
 
+# TODO: Fix word detection and add more keyword flexibility
 def classify_window(
     win_info: dict[WindowInfo, Optional[str | int]],
     app_list: list,
