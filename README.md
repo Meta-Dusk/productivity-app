@@ -18,11 +18,11 @@ Below is what you'd expect from the app:
 
 ## Installation
 
-**Step 1**
+### Step 1
 
 Go to the releases tab to the right, and download the latest version, and follow the instructions written there.
 
-**Step 2**
+### Step 2
 
 Simply open the executable, and the app will immediately check if you're *slacking off*. If it detects that you're not being productive, it will be sent to the front, if it's being hidden behind other windows.
 
@@ -34,9 +34,11 @@ Simply open the executable, and the app will immediately check if you're *slacki
 
 If you wish to run the files yourself, you can just clone the repository, then us a package manager like `uv`.
 
-**Requirements**:
+### Requirements
 
 - `uv` package manager (download in your global environment)
+
+### Setup
 
 If you have `uv` then, you can just let `uv` handle the project dependencies. If you don't know how to use `uv`, you can do this command:
 
