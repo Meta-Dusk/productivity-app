@@ -1,10 +1,11 @@
 import flet as ft
-import asyncio, os
+import asyncio, os, tempfile
 
 from loader import load_app_lists, CONFIG_FILE, CONFIG_ROOT, ensure_config_exists, _LOG_FILE
 from window import get_active_window_info, classify_window
 from data_types import WindowInfo, AppType
 from utilities import safe_sleep, format_time
+from pathlib import Path
 
 
 # === MAIN FLET APP ===
@@ -98,6 +99,7 @@ async def main_ui(page: ft.Page):
         print("Monitor task stopped.")
     
     # Controls
+    # TODO: Make some factory functions for repeated controls
     theme_btn = ft.AnimatedSwitcher(
         content=ft.IconButton(
             icon=ft.Icons.DARK_MODE, on_click=swap_theme,
@@ -114,22 +116,29 @@ async def main_ui(page: ft.Page):
         icon=ft.Icons.MINIMIZE, icon_color=ft.Colors.PRIMARY,
         on_click=minimize
     )
-    # TODO: Add buttons for opening log file and directory + Make some factory functions
+    
     popup_menu_btn = ft.PopupMenuButton(
         items=[
             ft.PopupMenuItem(
-                content="Edit Config", icon=ft.Icon(ft.Icons.FILE_OPEN, ft.Colors.PRIMARY),
+                content=ft.Text("Edit Config", color=ft.Colors.PRIMARY),
+                icon=ft.Icon(ft.Icons.FILE_OPEN, ft.Colors.PRIMARY),
                 on_click=lambda _: os.startfile(CONFIG_FILE)
             ),
             ft.PopupMenuItem(
-                content="Open Config Directory", icon=ft.Icon(ft.Icons.FOLDER_OPEN, ft.Colors.PRIMARY),
+                content=ft.Text("Open Config Directory", color=ft.Colors.PRIMARY),
+                icon=ft.Icon(ft.Icons.FOLDER_OPEN, ft.Colors.PRIMARY),
                 on_click=lambda _: os.startfile(CONFIG_ROOT)
             ),
             ft.PopupMenuItem(
-                content="Open Log", icon=ft.Icon(ft.Icons.FILE_OPEN, ft.Colors.SECONDARY),
+                content=ft.Text("Open Log", color=ft.Colors.SECONDARY),
+                icon=ft.Icon(ft.Icons.FILE_OPEN, ft.Colors.SECONDARY),
                 on_click=lambda _: os.startfile(_LOG_FILE)
+            ),
+            ft.PopupMenuItem(
+                content=ft.Text("Open Log Directory", color=ft.Colors.SECONDARY),
+                icon=ft.Icon(ft.Icons.FOLDER_OPEN, ft.Colors.SECONDARY),
+                on_click=lambda _: os.startfile(Path(tempfile.gettempdir()))
             )
-            # <- Insert "Open Log Directory" button
         ], icon_color=ft.Colors.PRIMARY
     )
     appbar = ft.AppBar(

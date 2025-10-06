@@ -177,6 +177,7 @@ def ensure_config_exists() -> Path:
 
 
 # --- Load app lists from config ---
+# TODO: Fix word detection and add more keyword flexibility
 def load_app_lists():
     """Load the productive and distracting lists from the config file."""
     productive, distracting, current_section = [], [], None
