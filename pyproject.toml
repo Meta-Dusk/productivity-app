@@ -1,6 +1,6 @@
 [project]
 name = "ProductivityApp"
-version = "0.2.0"
+version = "0.2.1"
 description = "An App for Checking Your Productivity"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -16,17 +16,19 @@ dependencies = [
   "pip>=25.2", # Only needed since flet needs it
   "uiautomation==2.0.29",
   "psutil==7.1.0",
+  "pywin32>=311",
+  "pyinstaller>=6.16.0",
 ]
 
 [tool.flet]
 org = "com.metadusk"
-product = "Test App"
+product = "Productivity App"
 company = "MetaDusk Inc."
 copyright = "Copyright (C) 2025 MetaDusk"
 compile_app = true
 compile_packages = true
 cleanup_on_compile = true
-build_number = 2
+build_number = 1
 
 [tool.flet.assets]
 include = [
