@@ -1,7 +1,7 @@
 import flet as ft
 import asyncio, os
 
-from loader import load_app_lists, CONFIG_FILE, CONFIG_ROOT, ensure_config_exists
+from loader import load_app_lists, CONFIG_FILE, CONFIG_ROOT, ensure_config_exists, _LOG_FILE
 from window import get_active_window_info, classify_window
 from data_types import WindowInfo, AppType
 from utilities import safe_sleep, format_time
@@ -18,7 +18,7 @@ async def main_ui(page: ft.Page):
         title = "ERROR: Config Not Ensured"
         pass
     productive_apps, distracting_keywords = load_app_lists()
-    REFRESH_RATE = 0.1
+    REFRESH_RATE = 0.2
     distraction_time = 0
     stop_event = asyncio.Event()
     
@@ -82,16 +82,19 @@ async def main_ui(page: ft.Page):
             
             if category != AppType.DISTRACTING:
                 await safe_sleep(REFRESH_RATE, stop_event)
+                if page.window.always_on_top:
+                    page.window.always_on_top = False
+                    page.window.update()
             else:
-                page.window.always_on_top = True
-                page.window.focused = False
-                page.window.update()
+                if not page.window.always_on_top:
+                    page.window.always_on_top = True
+                    page.window.update()
+                    await page.window.center()
                 distraction_time += 1
                 distractions_counter_text.spans[1].text = format_time(distraction_time)
                 distractions_counter_text.update()
                 print(f"Incremented distraction_time to: {format_time(distraction_time)}")
                 await safe_sleep(1, stop_event)
-                page.window.always_on_top = False
         print("Monitor task stopped.")
     
     # Controls
@@ -111,6 +114,7 @@ async def main_ui(page: ft.Page):
         icon=ft.Icons.MINIMIZE, icon_color=ft.Colors.PRIMARY,
         on_click=minimize
     )
+    # TODO: Add buttons for opening log file and directory + Make some factory functions
     popup_menu_btn = ft.PopupMenuButton(
         items=[
             ft.PopupMenuItem(
@@ -120,12 +124,21 @@ async def main_ui(page: ft.Page):
             ft.PopupMenuItem(
                 content="Open Config Directory", icon=ft.Icon(ft.Icons.FOLDER_OPEN, ft.Colors.PRIMARY),
                 on_click=lambda _: os.startfile(CONFIG_ROOT)
+            ),
+            ft.PopupMenuItem(
+                content="Open Log", icon=ft.Icon(ft.Icons.FILE_OPEN, ft.Colors.SECONDARY),
+                on_click=lambda _: os.startfile(_LOG_FILE)
             )
+            # <- Insert "Open Log Directory" button
         ], icon_color=ft.Colors.PRIMARY
     )
     appbar = ft.AppBar(
         title = title,
-        actions=[minimize_btn, theme_btn, popup_menu_btn, close_btn]
+        actions=[
+            theme_btn, popup_menu_btn,
+            ft.Container(padding=8),
+            minimize_btn, close_btn
+        ]
     )
     
     current_app = ft.Column(

@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 
 # Async Timers
@@ -26,3 +27,10 @@ def format_time(seconds: int) -> str:
         days = seconds // 86400
         hours = (seconds % 86400) // 3600
         return f"{days}d {hours}h" if hours else f"{days}d"
+
+# Date Stuff
+def get_date() -> str:
+    """Returns a formatted `date` + `time` string."""
+    now = datetime.now()
+    formatted = now.strftime("%Y-%m-%d %H:%M:%S")
+    return formatted
