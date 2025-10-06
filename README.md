@@ -16,9 +16,49 @@ Below is what you'd expect from the app:
 | **Times Distracted Counter** | Everytime you look at "distracting" apps, it will increment this counter. | Since version `0.1.1` |
 | **Customizable Keyword List** | You can add your own custom keywords to detect when using the app. | Since version `0.2.0` |
 
-## Usage
+## Installation
+
+**Step 1**
+
+Go to the releases tab to the right, and download the latest version, and follow the instructions written there.
+
+**Step 2**
 
 Simply open the executable, and the app will immediately check if you're *slacking off*. If it detects that you're not being productive, it will be sent to the front, if it's being hidden behind other windows.
+
+> If it doesn't detect anything (including itself), run the executable as **administrator**.
+
+**That's it.**
+
+## Setting Up as Dev
+
+If you wish to run the files yourself, you can just clone the repository, then us a package manager like `uv`.
+
+**Requirements**:
+
+- `uv` package manager (download in your global environment)
+
+If you have `uv` then, you can just let `uv` handle the project dependencies. If you don't know how to use `uv`, you can do this command:
+
+```bash
+uv sync
+uv lock
+uv run flet run
+```
+
+It will automatically download the missing dependencies. If it doesn't download properly, add an additional flag; `--prerelease=allow` just like this:
+
+```bash
+uv sync --prerelease=allow
+```
+
+Then check if you have `flet` with:
+
+```bash
+uv flet --version
+```
+
+Then do the first 3 commands again.
 
 ## Safety Concerns
 
