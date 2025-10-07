@@ -2,7 +2,7 @@ import flet as ft
 import asyncio
 
 from loader import load_app_lists, ensure_config_exists, reset_config
-from window import get_active_window_info, get_process_name
+from window import get_active_window_info, get_process_name, test_window_helper
 from data_types import WindowInfo, AppType
 from utilities import safe_sleep, format_time
 from components import (exit_button, theme_button, minimize_button, preset_popup_menu_button,
@@ -15,17 +15,29 @@ from smart_classifier import SmartClassifier
 async def main_ui(page: ft.Page):
     """The main UI/UX of the app."""
     # | Initial Setup |
+    # Check important files
     try:
         ensure_config_exists()
         simple_notification("✅ Loaded config files.", page)
     except Exception as e:
         error_msg = "⚠️  Error ensuring config files!"
-        print(f"[DEBUG]{error_msg} {e}")
+        print(f"[DEBUG] {error_msg} {e}")
         simple_notification(
             content=ft.Text(error_msg, color=ft.Colors.ERROR),
             page=page, duration=2000
         )
-        pass
+    
+    # Check window helper availability
+    DEBUG_MODE = __debug__ # True if running without -O
+    if not test_window_helper(verbose=DEBUG_MODE):
+        error_msg = "⚠️  Window helper is missing or not working!"
+        print(f"[DEBUG] {error_msg}")
+        simple_notification(
+            content=ft.Text(error_msg, color=ft.Colors.ERROR),
+            page=page, duration=3000
+        )
+    
+    # Variables
     window_names = load_app_lists()
     stop_event = asyncio.Event()
     classifier = SmartClassifier(window_names)
@@ -33,6 +45,7 @@ async def main_ui(page: ft.Page):
     distraction_time: int = 0
     productive_time: int = 0
     
+    # Extra page setup
     await page.window.center()
     
     

@@ -3,6 +3,7 @@ import flet as ft
 from main_ui import main_ui
 from setup import before_main_ui
 
+DEBUG_MODE = __debug__
 
 def before_main(page: ft.Page):
     before_main_ui(page)
@@ -12,4 +13,6 @@ async def main(page: ft.Page):
     
     
 if __name__ == "__main__":
+    if DEBUG_MODE:
+        print("Running in debug mode!")
     ft.run(main=main, before_main=before_main_ui)

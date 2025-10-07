@@ -16,6 +16,7 @@ Below is what you'd expect from the app:
 | **Times Distracted Counter** | Everytime you look at "distracting" apps, it will increment this counter. | Since version `0.1.1` |
 | **Customizable Keyword List** | You can add your own custom keywords to detect when using the app. | Since version `0.2.0` |
 | **Additional Menu Settings** | App behavior is now also customizable. | Since version `0.3.0` |
+| **Enhanced Keyword Matching System** | The config file that is used by the app to check for "productive" and "distracting" apps are now overhauled. It can fuzzy match, partial match, and more! | Since version `0.3.0` |
 
 ## Installation
 
@@ -90,3 +91,4 @@ Basically, this app works by using a library that only provides the window's nam
 | -------- | -------- | -------- |
 | **Customizable List for Used Keywords in Detection** | The user can edit a file to add their own keywords that they wish to detect. | 100% |
 | **Sound Effects** | A sound effect will play everytime the app catches the user _slacking off_. | 0% |
+| **Overhaul Keyword Matching System** | Rework the entire system to support multiple keyword checking systems, including the config file for it. | 100% |
