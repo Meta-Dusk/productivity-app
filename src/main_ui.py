@@ -1,7 +1,7 @@
 import flet as ft
 import asyncio
 
-from loader import load_app_lists, ensure_config_exists
+from loader import load_app_lists, ensure_config_exists, reset_config
 from window import get_active_window_info, classify_window
 from data_types import WindowInfo, AppType
 from utilities import safe_sleep, format_time
@@ -48,6 +48,21 @@ async def main_ui(page: ft.Page):
     async def on_event(e: ft.WindowEvent):
         if e.type == ft.WindowEventType.CLOSE:
             await on_close(e)
+    
+    def reset_config_btn_call(_):
+        if reset_config():
+            simple_notification(
+                content=ft.Text("✅ Successful reset of config file."),
+                page=page, duration=1500
+            )
+        else:
+            simple_notification(
+                content=ft.Text(
+                    value="⚠️  Failed to reset config file!",
+                    color=ft.Colors.ERROR
+                ),
+                page=page, duration=1500
+            )
     
     
     # | Events |
@@ -116,6 +131,11 @@ async def main_ui(page: ft.Page):
         icon=ft.Icons.FLIP_TO_FRONT, checked=True
     )
     popup_menu_btn = preset_popup_menu_button([
+        simple_popup_menu_item(
+            text="Reset Config Contents", icon=ft.Icons.FILE_OPEN_OUTLINED,
+            on_click=reset_config_btn_call,
+            color=ft.Colors.PRIMARY
+        ),
         popup_menu_item_fid, popup_menu_item_csid, popup_menu_item_btfid
     ])
     appbar = preset_appbar(

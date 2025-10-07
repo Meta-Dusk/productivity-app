@@ -1,7 +1,7 @@
-DEFAULT_CONFIG = """# ProductivityApp Config
-# Lines starting with "#" are comments
+DEFAULT_CONFIG = """# === ProductivityApp Config ===
+# Lines starting with "#" are comments.
 # Add more items to each list as you like.
-# Restart app to apply changes
+# Restart app to apply changes.
 
 [PRODUCTIVE_APPS]
 # Common productivity tools
@@ -32,7 +32,6 @@ teams.exe
 zoom.exe
 outlook.exe
 thunderbird.exe
-explorer.exe  # file management is sometimes productive
 
 [DISTRACTING_KEYWORDS]
 # Browsing / social media

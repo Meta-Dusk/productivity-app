@@ -1,7 +1,7 @@
 import asyncio, os
 import flet as ft
 from typing import Optional
-from loader import CONFIG_FILE, CONFIG_ROOT, LOG_FILE, LOG_DIR
+from loader import CONFIG_DIR, CONFIG_ROOT, LOG_FILE, LOG_DIR
 
 
 # === COMPONENT PRESETS ===
@@ -111,7 +111,7 @@ def preset_popup_menu_button(new_menu_items: list[ft.PopupMenuItem]) -> ft.Popup
         items=[
             simple_popup_menu_item(
                 text="Edit Config", icon=ft.Icons.FILE_OPEN,
-                on_click=lambda _: os.startfile(CONFIG_FILE),
+                on_click=lambda _: os.startfile(CONFIG_DIR),
                 color=ft.Colors.PRIMARY
             ),
             simple_popup_menu_item(
@@ -129,7 +129,7 @@ def preset_popup_menu_button(new_menu_items: list[ft.PopupMenuItem]) -> ft.Popup
                 text="Open Log Directory", icon=ft.Icons.FOLDER_OPEN,
                 on_click=lambda _: os.startfile(LOG_DIR),
                 color=ft.Colors.SECONDARY
-            ),
+            )
         ], icon_color=ft.Colors.PRIMARY
     )
 

@@ -20,8 +20,8 @@ LOG_DIR = Path(tempfile.gettempdir())
 LOG_FILE = LOG_DIR / f"{APP_NAME}_loader.log"
 
 # Reset log contents
-with open(LOG_FILE, "w", encoding="utf-8") as f:
-    f.write(f"[{get_date()}] Logs for {APP_NAME}\n{'=' * 50}\n")
+with open(LOG_FILE, "w", encoding="utf-8") as lf:
+    lf.write(f"[{get_date()}] Logs for {APP_NAME}\n{'=' * 50}\n")
 
 class LogType(Enum):
     WARNING = "warning"
@@ -46,8 +46,8 @@ def _log(msg: str, log_type: LogType = LogType.DEFAULT) -> None:
         except Exception:
             pass
         # append to log file (always safe)
-        with open(LOG_FILE, "a", encoding="utf-8") as fh:
-            fh.write(line)
+        with open(LOG_FILE, "a", encoding="utf-8") as lf:
+            lf.write(line)
     except Exception:
         # never crash logging
         pass
@@ -101,10 +101,22 @@ def _choose_writable_root() -> Path:
         _log(f"Final mkdir failed for {final}: {e}", LogType.WARNING)
     return final
 
-# determine CONFIG_ROOT and CONFIG_FILE (globals)
+# Determine directories and files
 CONFIG_ROOT = _choose_writable_root()
-OUTPUT_FILE = "output.txt"
-CONFIG_FILE = CONFIG_ROOT / OUTPUT_FILE
+CONFIG_FILE = "config.txt"
+CONFIG_DIR = CONFIG_ROOT / CONFIG_FILE
+
+def reset_config() -> bool:
+    """
+    Attempts to reset contents of the config file. Returns `True` if success.
+    """
+    try:
+        with open(CONFIG_DIR, "w", encoding="utf-8") as cf:
+            cf.write(DEFAULT_CONFIG)
+        return True
+    except Exception as e:
+        _log(f"Failed to reset config file contents: {e}", LogType.WARNING)
+        return False
 
 def ensure_config_exists() -> Path:
     """
@@ -112,7 +124,7 @@ def ensure_config_exists() -> Path:
     Returns the actual path to the config file that was used.
     This function will never raise an exception (it logs instead).
     """
-    global CONFIG_ROOT, CONFIG_FILE
+    global CONFIG_ROOT, CONFIG_DIR
 
     _log(f"ensure_config_exists() start. BASE_DIR={BASE_DIR} CONFIG_ROOT(candidate)={CONFIG_ROOT}")
 
@@ -140,55 +152,53 @@ def ensure_config_exists() -> Path:
                 _log(f"All mkdir attempts failed: {e3}", LogType.WARNING)
                 # still continue; CONFIG_ROOT may be non-writable but we won't raise
 
-    # update CONFIG_FILE to reflect chosen root
-    CONFIG_FILE = CONFIG_ROOT / OUTPUT_FILE
+    # update CONFIG_DIR to reflect chosen root
+    CONFIG_DIR = CONFIG_ROOT / CONFIG_FILE
 
     # If file doesn't exist, attempt to create it
     try:
-        if not CONFIG_FILE.exists():
-            CONFIG_FILE.write_text(DEFAULT_CONFIG, encoding="utf-8")
-            _log(f"Created default config at: {CONFIG_FILE}", LogType.GOOD)
+        if not CONFIG_DIR.exists():
+            CONFIG_DIR.write_text(DEFAULT_CONFIG, encoding="utf-8")
+            _log(f"Created default config at: {CONFIG_DIR}", LogType.GOOD)
         else:
-            _log(f"Found existing config at: {CONFIG_FILE}", LogType.GOOD)
+            _log(f"Found existing config at: {CONFIG_DIR}", LogType.GOOD)
     except Exception as e:
-        _log(f"Failed to create or write config at {CONFIG_FILE}: {e}", LogType.WARNING)
+        _log(f"Failed to create or write config at {CONFIG_DIR}: {e}", LogType.WARNING)
         # try to write a fallback config inside HOME or temp (guaranteed writable)
         try:
-            fallback = Path.home() / ".MetaDusk" / APP_NAME / OUTPUT_FILE
+            fallback = Path.home() / ".MetaDusk" / APP_NAME / CONFIG_FILE
             fallback.parent.mkdir(parents=True, exist_ok=True)
             fallback.write_text(DEFAULT_CONFIG, encoding="utf-8")
-            CONFIG_FILE = fallback
+            CONFIG_DIR = fallback
             CONFIG_ROOT = fallback.parent
             _log(f"Wrote fallback config at: {fallback}", LogType.GOOD)
         except Exception as e2:
             _log(f"Failed to write fallback config at HOME: {e2}", LogType.WARNING)
             try:
-                fallback2 = Path(tempfile.gettempdir()) / APP_NAME / OUTPUT_FILE
+                fallback2 = Path(tempfile.gettempdir()) / APP_NAME / CONFIG_FILE
                 fallback2.parent.mkdir(parents=True, exist_ok=True)
                 fallback2.write_text(DEFAULT_CONFIG, encoding="utf-8")
-                CONFIG_FILE = fallback2
+                CONFIG_DIR = fallback2
                 CONFIG_ROOT = fallback2.parent
                 _log(f"Wrote fallback config at TEMP: {fallback2}", LogType.GOOD)
             except Exception as e3:
                 _log(f"Failed to write fallback config at TEMP: {e3}", LogType.WARNING)
                 # give up but don't raise; the app should continue with empty lists
 
-    _log(f"ensure_config_exists() complete. Using CONFIG_ROOT={CONFIG_ROOT}, CONFIG_FILE={CONFIG_FILE}", LogType.GOOD)
-    return CONFIG_FILE
+    _log(f"ensure_config_exists() complete. Using CONFIG_ROOT={CONFIG_ROOT}, CONFIG_DIR={CONFIG_DIR}", LogType.GOOD)
+    return CONFIG_DIR
 
 
 # --- Load app lists from config ---
-# TODO: Add more categories for more flexibility
-# Example categories to add:
-# EXACT_MATCH, LOOSE_MATCH
+# TODO: Rework function to extract data from toml file.
 def load_app_lists():
     """Load the productive and distracting lists from the config file."""
     productive, distracting, current_section = [], [], None
 
-    if not CONFIG_FILE.exists():
+    if not CONFIG_DIR.exists():
         return productive, distracting
 
-    with CONFIG_FILE.open("r", encoding="utf-8") as f:
+    with CONFIG_DIR.open("r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line or line.startswith("#"):
