@@ -1,5 +1,4 @@
 import flet as ft
-
 from main_ui import main_ui
 from setup import before_main_ui
 

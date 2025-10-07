@@ -11,7 +11,7 @@ def before_main_ui(page: ft.Page):
     page.window.width = 550
     page.window.height = 400
     page.window.title_bar_hidden = True
-    page.window.prevent_close = True
+    page.window.prevent_close = False
     page.window.maximized = False
     
     page.on_close = lambda e: print(e)

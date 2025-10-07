@@ -4,7 +4,7 @@ DEFAULT_CONFIG = """# === ProductivityApp Config ===
 # Restart app to apply changes.
 
 [PRODUCTIVE]
-# Common productivity tools
+# Common productivity tools and IDEs
 apps = [
     "code.exe",
     "pycharm64.exe",
@@ -32,22 +32,97 @@ apps = [
     "teams.exe",
     "zoom.exe",
     "outlook.exe",
-    "thunderbird.exe"
+    "thunderbird.exe",
+    "postman.exe",
+    "datagrip.exe",
+    "dbeaver.exe",
+    "mysqlworkbench.exe",
+    "studio64.exe",        # IntelliJ variants
+    "xmind.exe",
+    "drawio.exe",
+    "notepad.exe"
 ]
 
-# Extra check for other productive stuff
+# Extra check for productive window titles / keywords
 keywords = [
+    # Study & learning
     "dashboard",
-    "course"
+    "course",
+    "lecture",
+    "tutorial",
+    "study",
+    "exam",
+    "notes",
+    "assignment",
+    "research",
+    "reference",
+    "textbook",
+    "math",
+    "mathematics",
+    "calculus",
+    "physics",
+    "science",
+    "biology",
+    "chemistry",
+    "project report",
+    "thesis",
+    "google docs",
+    "google sheets",
+    "visual studio code",
+    "pycharm",
+    "intellij",
+    "jetbrains",
+    "data analysis",
+    "data visualization",
+    "spreadsheet",
+    "report",
+    "kanban board",
+    "jira",
+    "asana",
+    "trello",
+    "git",
+    "github",
+    "gitlab",
+    "documentation",
+    "stack overflow",
+    "stackexchange",
+    "openai",
+    "api reference",
+    "python script",
+    "programming",
+    "development",
+    "debug",
+    "run configuration",
+    "terminal",
+    "command prompt",
+    "powershell",
+    "vscode"
 ]
 
 [DISTRACTING]
-# Specific apps to be labelled as distracting
+# Apps that are likely distracting or non-productive
 apps = [
-    "tlauncher.exe"
+    "tlauncher.exe",
+    "roblox.exe",
+    "steam.exe",
+    "epicgameslauncher.exe",
+    "genshinimpact.exe",
+    "valorant.exe",
+    "leagueclient.exe",
+    "leagueoflegends.exe",
+    "minecraftlauncher.exe",
+    "discord.exe",
+    "spotify.exe",
+    "netflix.exe",
+    "twitch.exe",
+    "chrome.exe",          # fuzzy-matched against social media titles
+    "msedge.exe",
+    "opera.exe",
+    "opera_gx.exe",
+    "firefox.exe"
 ]
 
-# Browsing, social media, other stuff
+# Social media, streaming, or other distracting content
 keywords = [
     "youtube",
     "facebook",
@@ -67,22 +142,36 @@ keywords = [
     "snapchat",
     "roblox",
     "steam",
-    "epicgames",
+    "epic games",
     "genshin",
     "valorant",
-    "leagueoflegends",
+    "league of legends",
     "minecraft",
     "whatsapp",
     "telegram",
     "hoyolab",
     "threads",
     "kick",
-    "primevideo",
+    "prime video",
     "hbo",
-    "disneyplus",
+    "disney plus",
     "crunchyroll",
     "bilibili",
     "dailymotion",
-    "deviantart"
+    "deviantart",
+    "anime",
+    "manga",
+    "movie",
+    "series",
+    "livestream",
+    "chat",
+    "music",
+    "playlist",
+    "funny videos",
+    "shorts",
+    "gaming",
+    "let's play",
+    "stream",
+    "watching now"
 ]
 """

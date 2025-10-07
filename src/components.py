@@ -10,17 +10,30 @@ def simple_icon_button(
     icon_color: ft.ColorValue = ft.Colors.PRIMARY,
     on_click: Optional[ft.ControlEventHandler[ft.IconButton]] = None
 ) -> ft.IconButton:
+    """Literally just an `IconButton` with a default `icon_color`."""
     return ft.IconButton(
         icon=icon, icon_color=icon_color, on_click=on_click
     )
 
 def simple_popup_menu_item(
-    text: str,
-    color: ft.ColorValue,
-    icon: ft.IconData,
+    text: str, color: ft.ColorValue, icon: ft.IconData,
     on_click: Optional[ft.ControlEventHandler[ft.PopupMenuItem]] = None,
     checked: Optional[bool] = None
 ) -> ft.PopupMenuItem:
+    """
+    A preset popup menu item. Use inside the `items` of a `PopupMenuButton`.
+    If `on_click` is `None` and `checked` is either `False` or `True`,
+    it will be set to a function that toggles its `checked` state.
+    
+    Args:
+        text (str): The displayed value of the text component.
+        color (ColorValue): The color of both the text and the `icon`.
+        on_click (ControlEventHandler): The function to be called if the menu item is clicked.
+        checked (bool): The `checked` state of the `PopupMenuItem`.
+    
+    Returns:
+        PopupMenuItem: A `PopupMenuItem` with an applied preset.
+    """
     def default_on_click(e: ft.ControlEventHandler[ft.PopupMenuItem]):
         """`e` only has `name="click"` and `data: bool`"""
         popup_menu_item.checked = e.data
@@ -38,6 +51,7 @@ def simple_popup_menu_item(
 # === PRE-ASSEMBLED COMPONENTS ===
 # | Buttons |
 def fullscreen_button(page: ft.Page) -> ft.IconButton:
+    """Handles the window maximizing functionality."""
     def update_icon():
         nonlocal btn
         btn.icon = set_icon()
@@ -60,6 +74,7 @@ def fullscreen_button(page: ft.Page) -> ft.IconButton:
     return btn
 
 def minimize_button(page: ft.Page) -> ft.IconButton:
+    """Handles the window minimizing functionality."""
     def on_click(_):
         page.window.minimized = True
     return simple_icon_button(
@@ -67,6 +82,7 @@ def minimize_button(page: ft.Page) -> ft.IconButton:
     )
 
 def theme_button(page: ft.Page) -> ft.AnimatedSwitcher:
+    """An animated theme-swapping button."""
     def swap_theme(_):
         icon_btn: ft.IconButton = btn.content
         if page.theme_mode == ft.ThemeMode.DARK:
@@ -96,6 +112,11 @@ def exit_button(
     page: ft.Page,
     on_click: Optional[ft.ControlEventHandler[ft.IconButton]] = None
 ) -> ft.IconButton:
+    """
+    A simple exit button. If `on_click` is `None`, then it will be set
+    to a function that calls the `close()` method from the `page`'s
+    `window`.
+    """
     if on_click is None:
         on_click = lambda _: asyncio.create_task(
             coro=page.window.close(),
@@ -107,6 +128,17 @@ def exit_button(
     )
 
 def preset_popup_menu_button(new_menu_items: list[ft.PopupMenuItem]) -> ft.PopupMenuButton:
+    """
+    A pre-configured `PopupMenuButton` that has all the buttons that are not toggleable.
+    `new_menu_items` can be added, which will be inserted in the middle section of the
+    menu. Usually, you will put the toggleable menu items there.
+    
+    Args:
+        new_menu_items (list): A list of `PopupMenuItem`s.
+    
+    Returns:
+        PopupMenuButton: A pre-configured `PopupMenuButton`.
+    """
     return ft.PopupMenuButton(
         items=[
             simple_popup_menu_item(
@@ -135,6 +167,9 @@ def preset_popup_menu_button(new_menu_items: list[ft.PopupMenuItem]) -> ft.Popup
 
 # | App Bar |
 def preset_appbar(title: str, actions: list[ft.Control]) -> ft.AppBar:
+    """
+    An `AppBar` that has its `title` component wrapped in a `WindowDragArea`.
+    """
     return ft.AppBar(
         title=ft.WindowDragArea(
             content=ft.Text(value=title, color=ft.Colors.PRIMARY),
