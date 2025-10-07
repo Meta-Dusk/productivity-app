@@ -2,18 +2,18 @@ import flet as ft
 import asyncio
 
 from loader import load_app_lists, ensure_config_exists, reset_config
-from window import get_active_window_info, classify_window
+from window import get_active_window_info, get_process_name
 from data_types import WindowInfo, AppType
 from utilities import safe_sleep, format_time
 from components import (exit_button, theme_button, minimize_button, preset_popup_menu_button,
                         preset_appbar, simple_popup_menu_item, fullscreen_button)
 from notifications import simple_notification
+from smart_classifier import SmartClassifier
 
 
 # === MAIN FLET APP ===
 async def main_ui(page: ft.Page):
     # | Initial Setup |
-    title = "Anti-Slacking Monitor"
     try:
         ensure_config_exists()
         simple_notification("✅ Loaded config files.", page)
@@ -25,9 +25,12 @@ async def main_ui(page: ft.Page):
             page=page, duration=2000
         )
         pass
-    productive_apps, distracting_keywords = load_app_lists()
-    distraction_time = 0
+    window_names = load_app_lists()
     stop_event = asyncio.Event()
+    classifier = SmartClassifier(window_names)
+    title = "Anti-Slacking Monitor"
+    distraction_time: int = 0
+    productive_time: int = 0
     
     await page.window.center()
     
@@ -66,16 +69,42 @@ async def main_ui(page: ft.Page):
     
     
     # | Events |
+    async def match_app_type(app_type: AppType):
+        nonlocal distraction_time, productive_time
+        match app_type:
+            case AppType.PRODUCTIVE:
+                productive_time += 1
+                productive_counter_text.spans[1].text = format_time(productive_time)
+                productive_counter_text.update()
+                print(f"Incremented productive_time to: {format_time(productive_time)}")
+            
+            case AppType.DISTRACTING:
+                if popup_menu_item_csid.checked:
+                    await page.window.center()
+                if not page.window.always_on_top and popup_menu_item_btfid.checked:
+                    page.window.always_on_top = True
+                    page.window.update()
+                if not page.window.maximized and popup_menu_item_fid.checked:
+                    page.window.maximized = True
+                    page.window.update()
+                distraction_time += 1
+                distractions_counter_text.spans[1].text = format_time(distraction_time)
+                distractions_counter_text.update()
+                print(f"Incremented distraction_time to: {format_time(distraction_time)}")
+                
+            case AppType.NEUTRAL | _:
+                if page.window.always_on_top:
+                    page.window.always_on_top = False
+                    page.window.update()
+    
     async def monitor_focus_async():
         nonlocal distraction_time
         prev_title = ""
-        
         while not stop_event.is_set():
             # Run blocking call in a background thread with COM initialized
             info = await asyncio.to_thread(get_active_window_info)
-            category = classify_window(info, productive_apps, distracting_keywords)
+            category = classifier.classify(win_info=info, process_getter=get_process_name)
             title = info.get(WindowInfo.NAME) or "Unknown Window"
-            
             if title != prev_title:
                 prev_title = title
                 current_app_column: ft.Column = current_app.controls
@@ -90,24 +119,7 @@ async def main_ui(page: ft.Page):
                     else ft.Colors.SECONDARY
                 )
                 page.update()
-            
-            if category != AppType.DISTRACTING:
-                if page.window.always_on_top:
-                    page.window.always_on_top = False
-                    page.window.update()
-            else:
-                if popup_menu_item_csid.checked:
-                    await page.window.center()
-                if not page.window.always_on_top and popup_menu_item_btfid.checked:
-                    page.window.always_on_top = True
-                    page.window.update()
-                if not page.window.maximized and popup_menu_item_fid.checked:
-                    page.window.maximized = True
-                    page.window.update()
-                distraction_time += 1
-                distractions_counter_text.spans[1].text = format_time(distraction_time)
-                distractions_counter_text.update()
-                print(f"Incremented distraction_time to: {format_time(distraction_time)}")
+            await match_app_type(category)
             await safe_sleep(1, stop_event)
         print("Monitor task stopped.")
     
@@ -159,11 +171,19 @@ async def main_ui(page: ft.Page):
         ],
         size=16, color=ft.Colors.ERROR
     )
+    productive_counter_text = ft.Text(
+        spans=[
+            ft.TextSpan("You Were Productive for: "),
+            ft.TextSpan(format_time(productive_time))
+        ],
+        size=16, color=ft.Colors.PRIMARY
+    )
     
     
     # | Layouts |
     controls = [
         distractions_counter_text,
+        productive_counter_text,
         ft.Divider(height=16),
         ft.Text("Current Window:", size=16),
         current_app,

@@ -3,72 +3,86 @@ DEFAULT_CONFIG = """# === ProductivityApp Config ===
 # Add more items to each list as you like.
 # Restart app to apply changes.
 
-[PRODUCTIVE_APPS]
+[PRODUCTIVE]
 # Common productivity tools
-code.exe
-pycharm64.exe
-idea64.exe
-clion64.exe
-rider64.exe
-devenv.exe
-sublime_text.exe
-notepad++.exe
-obsidian.exe
-anki.exe
-notion.exe
-onenote.exe
-excel.exe
-winword.exe
-mspowerpoint.exe
-powerbi.exe
-acrobat.exe
-pdfreader.exe
-wps.exe
-todoist.exe
-ticktick.exe
-clockify.exe
-slack.exe
-teams.exe
-zoom.exe
-outlook.exe
-thunderbird.exe
+apps = [
+    "code.exe",
+    "pycharm64.exe",
+    "idea64.exe",
+    "clion64.exe",
+    "rider64.exe",
+    "devenv.exe",
+    "sublime_text.exe",
+    "notepad++.exe",
+    "obsidian.exe",
+    "anki.exe",
+    "notion.exe",
+    "onenote.exe",
+    "excel.exe",
+    "winword.exe",
+    "mspowerpoint.exe",
+    "powerbi.exe",
+    "acrobat.exe",
+    "pdfreader.exe",
+    "wps.exe",
+    "todoist.exe",
+    "ticktick.exe",
+    "clockify.exe",
+    "slack.exe",
+    "teams.exe",
+    "zoom.exe",
+    "outlook.exe",
+    "thunderbird.exe"
+]
 
-[DISTRACTING_KEYWORDS]
-# Browsing / social media
-youtube
-facebook
-instagram
-reddit
-twitter
-tiktok
-discord
-messenger
-netflix
-twitch
-spotify
-soundcloud
-pinterest
-9gag
-tumblr
-snapchat
-roblox
-steam
-epicgames
-genshin
-valorant
-leagueoflegends
-minecraft
-whatsapp
-telegram
-hoyolab
-threads
-kick
-primevideo
-hbo
-disneyplus
-reddit
-crunchyroll
-bilibili
-dailymotion
-deviantart
+# Extra check for other productive stuff
+keywords = [
+    "dashboard",
+    "course"
+]
+
+[DISTRACTING]
+# Specific apps to be labelled as distracting
+apps = [
+    "tlauncher.exe"
+]
+
+# Browsing, social media, other stuff
+keywords = [
+    "youtube",
+    "facebook",
+    "instagram",
+    "reddit",
+    "twitter",
+    "tiktok",
+    "discord",
+    "messenger",
+    "netflix",
+    "twitch",
+    "spotify",
+    "soundcloud",
+    "pinterest",
+    "9gag",
+    "tumblr",
+    "snapchat",
+    "roblox",
+    "steam",
+    "epicgames",
+    "genshin",
+    "valorant",
+    "leagueoflegends",
+    "minecraft",
+    "whatsapp",
+    "telegram",
+    "hoyolab",
+    "threads",
+    "kick",
+    "primevideo",
+    "hbo",
+    "disneyplus",
+    "crunchyroll",
+    "bilibili",
+    "dailymotion",
+    "deviantart"
+]
 """
