@@ -41,8 +41,8 @@ def get_active_window_info() -> dict[WindowInfo, Optional[str | int]]:
         except:
             pass
 
-def get_process_name(pid: int) -> str:
+def get_process_name(process_id: int) -> str:
     try:
-        return psutil.Process(pid).name()
+        return psutil.Process(process_id).name()
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, ValueError):
         return "unknown"

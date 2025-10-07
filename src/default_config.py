@@ -38,7 +38,12 @@ apps = [
 # Extra check for other productive stuff
 keywords = [
     "dashboard",
-    "course"
+    "course",
+    "calculus",
+    "physics",
+    "science",
+    "math",
+    "mathematics"
 ]
 
 [DISTRACTING]

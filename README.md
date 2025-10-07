@@ -6,7 +6,7 @@ This is for people who need an app to monitor whenever they `alt + tab` or just 
 
 Below is what you'd expect from the app:
 
-![productivity app preview](https://github.com/user-attachments/assets/bbb32838-1ad1-43ff-a99e-27c6270f4ebe)
+> Placeholder
 
 ## Features
 
@@ -15,6 +15,7 @@ Below is what you'd expect from the app:
 | **Window Check** | The app will check if look at "distracting" apps by checking the name of the executable. | Since version `0.1.1` |
 | **Times Distracted Counter** | Everytime you look at "distracting" apps, it will increment this counter. | Since version `0.1.1` |
 | **Customizable Keyword List** | You can add your own custom keywords to detect when using the app. | Since version `0.2.0` |
+| **Additional Menu Settings** | App behavior is now also customizable. | Since version `0.3.0` |
 
 ## Installation
 
@@ -24,7 +25,7 @@ Go to the releases tab to the right, and download the latest version, and follow
 
 ### Step 2
 
-Simply open the executable, and the app will immediately check if you're *slacking off*. If it detects that you're not being productive, it will be sent to the front, if it's being hidden behind other windows.
+Simply open the executable, and the app will immediately check if you're _slacking off_. Specific app behavior can be modified within the app's popup menu.
 
 > If it doesn't detect anything (including itself), run the executable as **administrator**.
 
@@ -32,11 +33,11 @@ Simply open the executable, and the app will immediately check if you're *slacki
 
 ## Setting Up as Dev
 
-If you wish to run the files yourself, you can just clone the repository, then us a package manager like `uv`.
+If you wish to run the files yourself, you can just clone the repository, then use a package manager like `uv`.
 
 ### Requirements
 
-- `uv` package manager (download in your global environment)
+- `uv` package manager (download in your global environment).
 
 ### Setup
 
@@ -88,4 +89,4 @@ Basically, this app works by using a library that only provides the window's nam
 | Feature | Description | Progress |
 | -------- | -------- | -------- |
 | **Customizable List for Used Keywords in Detection** | The user can edit a file to add their own keywords that they wish to detect. | 100% |
-| **Sound Effects** | A sound effect will play everytime the app catches the user *slacking off*. | 0% |
+| **Sound Effects** | A sound effect will play everytime the app catches the user _slacking off_. | 0% |

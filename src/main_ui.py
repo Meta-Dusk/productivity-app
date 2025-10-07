@@ -13,6 +13,7 @@ from smart_classifier import SmartClassifier
 
 # === MAIN FLET APP ===
 async def main_ui(page: ft.Page):
+    """The main UI/UX of the app."""
     # | Initial Setup |
     try:
         ensure_config_exists()
@@ -37,6 +38,9 @@ async def main_ui(page: ft.Page):
     
     # | Event Handlers |
     async def on_close(_):
+        """
+        Handles window closing + animations.
+        """
         print("App is closing... Waiting for monitor to stop.")
         if not stop_event.is_set():
             stop_event.set()
@@ -53,6 +57,9 @@ async def main_ui(page: ft.Page):
             await on_close(e)
     
     def reset_config_btn_call(_):
+        """
+        Resets the config to its default values once called.
+        """
         if reset_config():
             simple_notification(
                 content=ft.Text("✅ Successful reset of config file."),
@@ -70,6 +77,9 @@ async def main_ui(page: ft.Page):
     
     # | Events |
     async def match_app_type(app_type: AppType):
+        """
+        Event handler for detected window type from monitor task.
+        """
         nonlocal distraction_time, productive_time
         match app_type:
             case AppType.PRODUCTIVE:
@@ -98,6 +108,9 @@ async def main_ui(page: ft.Page):
                     page.window.update()
     
     async def monitor_focus_async():
+        """
+        This is the main looping function for window detection and classification.
+        """
         nonlocal distraction_time
         prev_title = ""
         while not stop_event.is_set():
