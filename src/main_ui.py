@@ -1,31 +1,41 @@
 import flet as ft
-import asyncio, os, tempfile
+import asyncio
 
-from loader import load_app_lists, CONFIG_FILE, CONFIG_ROOT, ensure_config_exists, _LOG_FILE
-from window import get_active_window_info, classify_window
+from loader import load_app_lists, ensure_config_exists, reset_config
+from window import get_active_window_info, get_process_name
 from data_types import WindowInfo, AppType
 from utilities import safe_sleep, format_time
-from pathlib import Path
+from components import (exit_button, theme_button, minimize_button, preset_popup_menu_button,
+                        preset_appbar, simple_popup_menu_item, fullscreen_button)
+from notifications import simple_notification
+from smart_classifier import SmartClassifier
 
 
 # === MAIN FLET APP ===
 async def main_ui(page: ft.Page):
-    # Initial Setup
-    title = "Anti-Slacking Monitor"
+    # | Initial Setup |
     try:
         ensure_config_exists()
-    except Exception:
-        print("Error ensuring config files")
-        title = "ERROR: Config Not Ensured"
+        simple_notification("✅ Loaded config files.", page)
+    except Exception as e:
+        error_msg = "⚠️  Error ensuring config files!"
+        print(f"[DEBUG]{error_msg} {e}")
+        simple_notification(
+            content=ft.Text(error_msg, color=ft.Colors.ERROR),
+            page=page, duration=2000
+        )
         pass
-    productive_apps, distracting_keywords = load_app_lists()
-    REFRESH_RATE = 0.2
-    distraction_time = 0
+    window_names = load_app_lists()
     stop_event = asyncio.Event()
+    classifier = SmartClassifier(window_names)
+    title = "Anti-Slacking Monitor"
+    distraction_time: int = 0
+    productive_time: int = 0
     
     await page.window.center()
     
-    # Event Handlers
+    
+    # | Event Handlers |
     async def on_close(_):
         print("App is closing... Waiting for monitor to stop.")
         if not stop_event.is_set():
@@ -38,34 +48,63 @@ async def main_ui(page: ft.Page):
         page.window.update()
         await page.window.close()
     
-    def swap_theme(_):
-        icon_btn: ft.IconButton = theme_btn.content
-        if page.theme_mode == ft.ThemeMode.DARK:
-            page.theme_mode = ft.ThemeMode.LIGHT
-            icon_btn.icon = ft.Icons.LIGHT_MODE
-        else:
-            page.theme_mode = ft.ThemeMode.DARK
-            icon_btn.icon = ft.Icons.DARK_MODE
-        icon_btn.update()
-    
-    def minimize(_):
-        page.window.minimized = True
-    
     async def on_event(e: ft.WindowEvent):
         if e.type == ft.WindowEventType.CLOSE:
             await on_close(e)
     
-    # Events
+    def reset_config_btn_call(_):
+        if reset_config():
+            simple_notification(
+                content=ft.Text("✅ Successful reset of config file."),
+                page=page, duration=1500
+            )
+        else:
+            simple_notification(
+                content=ft.Text(
+                    value="⚠️  Failed to reset config file!",
+                    color=ft.Colors.ERROR
+                ),
+                page=page, duration=1500
+            )
+    
+    
+    # | Events |
+    async def match_app_type(app_type: AppType):
+        nonlocal distraction_time, productive_time
+        match app_type:
+            case AppType.PRODUCTIVE:
+                productive_time += 1
+                productive_counter_text.spans[1].text = format_time(productive_time)
+                productive_counter_text.update()
+                print(f"Incremented productive_time to: {format_time(productive_time)}")
+            
+            case AppType.DISTRACTING:
+                if popup_menu_item_csid.checked:
+                    await page.window.center()
+                if not page.window.always_on_top and popup_menu_item_btfid.checked:
+                    page.window.always_on_top = True
+                    page.window.update()
+                if not page.window.maximized and popup_menu_item_fid.checked:
+                    page.window.maximized = True
+                    page.window.update()
+                distraction_time += 1
+                distractions_counter_text.spans[1].text = format_time(distraction_time)
+                distractions_counter_text.update()
+                print(f"Incremented distraction_time to: {format_time(distraction_time)}")
+                
+            case AppType.NEUTRAL | _:
+                if page.window.always_on_top:
+                    page.window.always_on_top = False
+                    page.window.update()
+    
     async def monitor_focus_async():
         nonlocal distraction_time
         prev_title = ""
-        
         while not stop_event.is_set():
             # Run blocking call in a background thread with COM initialized
             info = await asyncio.to_thread(get_active_window_info)
-            category = classify_window(info, productive_apps, distracting_keywords)
+            category = classifier.classify(win_info=info, process_getter=get_process_name)
             title = info.get(WindowInfo.NAME) or "Unknown Window"
-            
             if title != prev_title:
                 prev_title = title
                 current_app_column: ft.Column = current_app.controls
@@ -80,106 +119,86 @@ async def main_ui(page: ft.Page):
                     else ft.Colors.SECONDARY
                 )
                 page.update()
-            
-            if category != AppType.DISTRACTING:
-                await safe_sleep(REFRESH_RATE, stop_event)
-                if page.window.always_on_top:
-                    page.window.always_on_top = False
-                    page.window.update()
-            else:
-                if not page.window.always_on_top:
-                    page.window.always_on_top = True
-                    page.window.update()
-                    await page.window.center()
-                distraction_time += 1
-                distractions_counter_text.spans[1].text = format_time(distraction_time)
-                distractions_counter_text.update()
-                print(f"Incremented distraction_time to: {format_time(distraction_time)}")
-                await safe_sleep(1, stop_event)
+            await match_app_type(category)
+            await safe_sleep(1, stop_event)
         print("Monitor task stopped.")
     
-    # Controls
-    # TODO: Make some factory functions for repeated controls
-    theme_btn = ft.AnimatedSwitcher(
-        content=ft.IconButton(
-            icon=ft.Icons.DARK_MODE, on_click=swap_theme,
-            icon_color=ft.Colors.PRIMARY
-        ),
-        transition=ft.AnimatedSwitcherTransition.ROTATION,
-        duration=500, reverse_duration=100
-    )
-    close_btn = ft.IconButton(
-        icon=ft.Icons.CLOSE, icon_color=ft.Colors.PRIMARY,
-        on_click=on_close
-    )
-    minimize_btn = ft.IconButton(
-        icon=ft.Icons.MINIMIZE, icon_color=ft.Colors.PRIMARY,
-        on_click=minimize
-    )
     
-    popup_menu_btn = ft.PopupMenuButton(
-        items=[
-            ft.PopupMenuItem(
-                content=ft.Text("Edit Config", color=ft.Colors.PRIMARY),
-                icon=ft.Icon(ft.Icons.FILE_OPEN, ft.Colors.PRIMARY),
-                on_click=lambda _: os.startfile(CONFIG_FILE)
-            ),
-            ft.PopupMenuItem(
-                content=ft.Text("Open Config Directory", color=ft.Colors.PRIMARY),
-                icon=ft.Icon(ft.Icons.FOLDER_OPEN, ft.Colors.PRIMARY),
-                on_click=lambda _: os.startfile(CONFIG_ROOT)
-            ),
-            ft.PopupMenuItem(
-                content=ft.Text("Open Log", color=ft.Colors.SECONDARY),
-                icon=ft.Icon(ft.Icons.FILE_OPEN, ft.Colors.SECONDARY),
-                on_click=lambda _: os.startfile(_LOG_FILE)
-            ),
-            ft.PopupMenuItem(
-                content=ft.Text("Open Log Directory", color=ft.Colors.SECONDARY),
-                icon=ft.Icon(ft.Icons.FOLDER_OPEN, ft.Colors.SECONDARY),
-                on_click=lambda _: os.startfile(Path(tempfile.gettempdir()))
-            )
-        ], icon_color=ft.Colors.PRIMARY
+    # | Controls |
+    theme_btn = theme_button(page)
+    close_btn = exit_button(page, on_close)
+    minimize_btn = minimize_button(page)
+    fullscreen_btn = fullscreen_button(page)
+    
+    popup_menu_item_fid = simple_popup_menu_item(
+        text="Fullscreen if Distracted", color=ft.Colors.TERTIARY,
+        icon=ft.Icons.FULLSCREEN, checked=False
     )
-    appbar = ft.AppBar(
+    popup_menu_item_csid = simple_popup_menu_item(
+        text="Center Screen if Distracted", color=ft.Colors.TERTIARY,
+        icon=ft.Icons.CENTER_FOCUS_STRONG, checked=True
+    )
+    popup_menu_item_btfid = simple_popup_menu_item(
+        text="Bring to Front if Distracted", color=ft.Colors.TERTIARY,
+        icon=ft.Icons.FLIP_TO_FRONT, checked=True
+    )
+    popup_menu_btn = preset_popup_menu_button([
+        simple_popup_menu_item(
+            text="Reset Config Contents", icon=ft.Icons.FILE_OPEN_OUTLINED,
+            on_click=reset_config_btn_call,
+            color=ft.Colors.PRIMARY
+        ),
+        popup_menu_item_fid, popup_menu_item_csid, popup_menu_item_btfid
+    ])
+    appbar = preset_appbar(
         title = title,
         actions=[
             theme_btn, popup_menu_btn,
             ft.Container(padding=8),
-            minimize_btn, close_btn
+            minimize_btn, fullscreen_btn, close_btn
         ]
     )
     
     current_app = ft.Column(
-        controls=[ft.Text("Detecting active window...", size=18, weight=ft.FontWeight.BOLD, data="editable_text")],
+        controls=[ft.Text("Detecting active window...", size=16, weight=ft.FontWeight.BOLD, data="editable_text")],
         scroll=ft.ScrollMode.ALWAYS, expand=True
     )
-    category_text = ft.Text("Unknown", size=28, weight=ft.FontWeight.BOLD)
+    category_text = ft.Text("Unknown", size=24, weight=ft.FontWeight.BOLD)
     distractions_counter_text = ft.Text(
         spans=[
             ft.TextSpan("You Were Distracted for: "),
             ft.TextSpan(format_time(distraction_time))
         ],
-        size=18, color=ft.Colors.ERROR
+        size=16, color=ft.Colors.ERROR
+    )
+    productive_counter_text = ft.Text(
+        spans=[
+            ft.TextSpan("You Were Productive for: "),
+            ft.TextSpan(format_time(productive_time))
+        ],
+        size=16, color=ft.Colors.PRIMARY
     )
     
+    
+    # | Layouts |
     controls = [
         distractions_counter_text,
-        ft.Divider(height=20),
-        ft.Text("Current Window:", size=14),
+        productive_counter_text,
+        ft.Divider(height=16),
+        ft.Text("Current Window:", size=16),
         current_app,
-        ft.Divider(height=20),
-        ft.Text("Status:", size=14),
+        ft.Divider(height=16),
+        ft.Text("Status:", size=16),
         category_text,
     ]
     column = ft.Column(
         controls=controls,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        spacing=5
+        spacing=4
     )
     container = ft.Container(
         content=column,
-        padding=20, border_radius=16, expand=True,
+        padding=16, border_radius=16, expand=True,
         bgcolor=ft.Colors.with_opacity(0.1, ft.Colors.SURFACE_CONTAINER),
         alignment=ft.Alignment.CENTER,
     )
@@ -190,6 +209,8 @@ async def main_ui(page: ft.Page):
         animate_offset=ft.Animation(1000, ft.AnimationCurve.EASE_IN_OUT)
     )
     
+    
+    # | Page Stuff + Animation |
     page.add(form)
     page.appbar = appbar
     page.run_task(monitor_focus_async)

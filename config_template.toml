@@ -1,4 +1,4 @@
-DEFAULT_CONFIG = """# === ProductivityApp Config ===
+# === ProductivityApp Config ===
 # Lines starting with "#" are comments.
 # Add more items to each list as you like.
 # Restart app to apply changes.
@@ -85,4 +85,3 @@ keywords = [
     "dailymotion",
     "deviantart"
 ]
-"""

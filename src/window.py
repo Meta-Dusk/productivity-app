@@ -2,7 +2,7 @@ import psutil, pythoncom
 import uiautomation as auto
 
 from typing import Optional
-from data_types import WindowInfo, AppType
+from data_types import WindowInfo, AppType, WindowNames
 
 
 def get_active_window_info() -> dict[WindowInfo, Optional[str | int]]:
@@ -46,19 +46,3 @@ def get_process_name(pid: int) -> str:
         return psutil.Process(pid).name()
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, ValueError):
         return "unknown"
-
-# TODO: Fix word detection and add more keyword flexibility
-def classify_window(
-    win_info: dict[WindowInfo, Optional[str | int]],
-    app_list: list,
-    keywords: list
-) -> AppType:
-    title = (win_info.get(WindowInfo.NAME) or "").lower()
-    process = (get_process_name(win_info.get(WindowInfo.PROCESS_ID)) or "").lower()
-    
-    if any(app.lower() in process for app in app_list):
-        return AppType.PRODUCTIVE
-    elif any(word.lower() in title for word in keywords):
-        return AppType.DISTRACTING
-    else:
-        return AppType.NEUTRAL
