@@ -16,11 +16,12 @@ else:
     BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Log file (always write to a safe location)
-_LOG_FILE = Path(tempfile.gettempdir()) / f"{APP_NAME}_loader.log"
+LOG_DIR = Path(tempfile.gettempdir())
+LOG_FILE = LOG_DIR / f"{APP_NAME}_loader.log"
 
 # Reset log contents
-with open(_LOG_FILE, "w", encoding="utf-8") as f:
-    f.write(f"[{get_date()}] Logs logs logs...\n=====================================\n")
+with open(LOG_FILE, "w", encoding="utf-8") as f:
+    f.write(f"[{get_date()}] Logs for {APP_NAME}\n{'=' * 50}\n")
 
 class LogType(Enum):
     WARNING = "warning"
@@ -45,7 +46,7 @@ def _log(msg: str, log_type: LogType = LogType.DEFAULT) -> None:
         except Exception:
             pass
         # append to log file (always safe)
-        with open(_LOG_FILE, "a", encoding="utf-8") as fh:
+        with open(LOG_FILE, "a", encoding="utf-8") as fh:
             fh.write(line)
     except Exception:
         # never crash logging
