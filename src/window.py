@@ -1,18 +1,23 @@
-import json, subprocess
+import json, subprocess, sys
 from pathlib import Path
 from typing import Optional
 from data_types import WindowInfo
 
 
-HELPER_PATH = Path(__file__).parent / "bin" / "window_helper.exe"
-DEBUG_MODE = __debug__
-
-
 # === MAIN FUNCTIONS ===
+def get_helper_path() -> Path:
+    if getattr(sys, "frozen", False):
+        base_dir = Path(sys.executable).resolve().parent
+    else:
+        base_dir = Path(__file__).resolve().parent
+    helper_path = base_dir / "assets" / "bin" / "window_helper.exe"
+    return helper_path
+
 def get_active_window_info() -> dict[WindowInfo, Optional[str | int]]:
     """Uses external helper to fetch window info."""
-    if not HELPER_PATH.exists():
-        print("⚠️  Helper executable not found:", HELPER_PATH)
+    helper_path = get_helper_path()
+    if not helper_path.exists():
+        print("⚠️  Helper executable not found:", helper_path)
         return {
             WindowInfo.NAME: "UnknownApp",
             WindowInfo.CLASS_NAME: "None",
@@ -21,7 +26,7 @@ def get_active_window_info() -> dict[WindowInfo, Optional[str | int]]:
 
     try:
         result = subprocess.run(
-            [str(HELPER_PATH), "window_info"],
+            [str(helper_path), "window_info"],
             capture_output=True,
             text=True,
             timeout=3,
@@ -46,22 +51,29 @@ def get_process_name(process_id: int) -> str:
 
 
 # === TESTERS ===
+def check_helper_dir() -> bool:
+    """Checks for the window helper executable."""
+    helper_path = get_helper_path()
+    print(f"[DEBUG] Looking for `window_helper` at: {helper_path}")
+    path_exists = helper_path.exists()
+    print(f"[DEBUG] {"Found" if path_exists else "Missing"} `window_helper` executable.")
+    return path_exists
+
 def test_window_helper(verbose: bool = True) -> bool:
+    # TODO: Fix the issue of this function hanging when called in a frozen environment.
     """
     Tests whether the window_helper executable is available and working.
     Returns True if successful, False otherwise.
     """
-    import json
-    import subprocess
-
-    if not HELPER_PATH.exists():
+    helper_path = get_helper_path()
+    if not helper_path.exists():
         if verbose:
-            print(f"❌ Helper not found at: {HELPER_PATH}")
+            print(f"❌ Helper not found at: {helper_path}")
         return False
 
     try:
         result = subprocess.run(
-            [str(HELPER_PATH), "window_info"],
+            [str(helper_path), "window_info"],
             capture_output=True,
             text=True,
             timeout=3,
@@ -95,6 +107,4 @@ def test_window_helper(verbose: bool = True) -> bool:
 
 # Run this file to test if the helper works.
 if __name__ == "__main__":
-    if DEBUG_MODE:
-        print("Running in debug mode!")
-    test_window_helper(verbose=DEBUG_MODE)
+    test_window_helper()

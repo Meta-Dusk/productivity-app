@@ -1,8 +1,7 @@
 import flet as ft
 import asyncio
-
 from loader import load_app_lists, ensure_config_exists, reset_config
-from window import get_active_window_info, get_process_name, test_window_helper
+from window import get_active_window_info, get_process_name, check_helper_dir
 from data_types import WindowInfo, AppType
 from utilities import safe_sleep, format_time
 from components import (exit_button, theme_button, minimize_button, preset_popup_menu_button,
@@ -15,38 +14,99 @@ from smart_classifier import SmartClassifier
 async def main_ui(page: ft.Page):
     """The main UI/UX of the app."""
     # | Initial Setup |
+    title = "Anti-Slacking Monitor"
+    loading_interval: float = 0.5
+    await page.window.center()
+    loading_text = ft.Text(
+        value="Loading App Config...", size=16,
+        text_align=ft.TextAlign.CENTER,
+        color=ft.Colors.SECONDARY
+    )
+    progress_ring = ft.ProgressRing(
+        color=ft.Colors.PRIMARY,
+        stroke_width=4, width=100, height=100
+    )
+    loading_controls = ft.WindowDragArea(
+        content=ft.Container(
+            content=ft.Column(
+                controls=[loading_text, progress_ring],
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=16, run_alignment=16
+            ),
+            expand=True, alignment=ft.Alignment.CENTER,
+            padding=8
+        ),
+        maximizable=False, expand=True
+    )
+    page.add(loading_controls)
+    page.appbar = preset_appbar(
+        title=title, actions=[
+            exit_button(page)
+        ]
+    )
+    
     # Check important files
     try:
         ensure_config_exists()
-        simple_notification("✅ Loaded config files.", page)
+        simple_notification("Loaded config files.", page)
     except Exception as e:
-        error_msg = "⚠️  Error ensuring config files!"
-        print(f"[DEBUG] {error_msg} {e}")
+        error_msg = "Error ensuring config files!"
+        print(f"[ERROR] {error_msg} {e}")
         simple_notification(
             content=ft.Text(error_msg, color=ft.Colors.ERROR),
-            page=page, duration=2000
+            page=page, duration=2000, bgcolor=ft.Colors.ERROR_CONTAINER
         )
+        
+    await asyncio.sleep(loading_interval)
+    loading_text.value = "Checking Window Helper Directory..."
+    loading_text.update()
     
     # Check window helper availability
-    DEBUG_MODE = __debug__ # True if running without -O
-    if not test_window_helper(verbose=DEBUG_MODE):
-        error_msg = "⚠️  Window helper is missing or not working!"
-        print(f"[DEBUG] {error_msg}")
+    try:
+        if check_helper_dir():
+            await asyncio.sleep(loading_interval)
+            loading_text.value = "Loading Window Helper..."
+            loading_text.update()
+            # ===================================================================
+            # I guess let's just not test the window helper then...
+            # For some reason, when running the function, it just hangs the app.
+            # Even though it should work just fine! Haiyah...
+            # Simply not calling it fixes the "issue" somehow.
+            # ===================================================================
+            # from window import test_window_helper
+            # if test_window_helper():
+            #     simple_notification("Loaded `window_helper` executable.", page)
+        else:
+            error_msg = "Missing `window_helper` executable!"
+            simple_notification(
+                content=ft.Text(error_msg, color=ft.Colors.ERROR),
+                page=page, duration=2000, bgcolor=ft.Colors.ERROR_CONTAINER
+            )
+    except Exception as e:
+        error_msg = "Error testing `test_window_helper()`! Copied error to clipboard."
+        await page.clipboard.set(e)
+        print(f"[ERROR] {error_msg} {e}")
         simple_notification(
             content=ft.Text(error_msg, color=ft.Colors.ERROR),
-            page=page, duration=3000
+            page=page, duration=4000, bgcolor=ft.Colors.ERROR_CONTAINER
         )
+    await asyncio.sleep(loading_interval)
+    loading_text.value = "Finished! Starting App."
+    loading_text.color = ft.Colors.PRIMARY
+    progress_ring.visible = False
+    page.update()
+    await asyncio.sleep(1)
+    page.controls.clear()
+    page.window.prevent_close = True
+    
     
     # Variables
     window_names = load_app_lists()
     stop_event = asyncio.Event()
     classifier = SmartClassifier(window_names)
-    title = "Anti-Slacking Monitor"
     distraction_time: int = 0
     productive_time: int = 0
-    
-    # Extra page setup
-    await page.window.center()
     
     
     # | Event Handlers |
@@ -66,8 +126,11 @@ async def main_ui(page: ft.Page):
         await page.window.close()
     
     async def on_event(e: ft.WindowEvent):
-        if e.type == ft.WindowEventType.CLOSE:
-            await on_close(e)
+        match e.type:
+            case ft.WindowEventType.CLOSE:
+                await on_close(e)
+            case _:
+                pass
     
     def reset_config_btn_call(_):
         """
@@ -75,16 +138,17 @@ async def main_ui(page: ft.Page):
         """
         if reset_config():
             simple_notification(
-                content=ft.Text("✅ Successful reset of config file."),
+                content=ft.Text("Successful reset of config file."),
                 page=page, duration=1500
             )
         else:
             simple_notification(
                 content=ft.Text(
-                    value="⚠️  Failed to reset config file!",
+                    value="Failed to reset config file!",
                     color=ft.Colors.ERROR
                 ),
-                page=page, duration=1500
+                page=page, duration=1500,
+                bgcolor=ft.Colors.ERROR_CONTAINER
             )
     
     
@@ -100,6 +164,7 @@ async def main_ui(page: ft.Page):
                 productive_counter_text.spans[1].text = format_time(productive_time)
                 productive_counter_text.update()
                 print(f"Incremented productive_time to: {format_time(productive_time)}")
+                await safe_sleep(1, stop_event)
             
             case AppType.DISTRACTING:
                 if popup_menu_item_csid.checked:
@@ -114,11 +179,13 @@ async def main_ui(page: ft.Page):
                 distractions_counter_text.spans[1].text = format_time(distraction_time)
                 distractions_counter_text.update()
                 print(f"Incremented distraction_time to: {format_time(distraction_time)}")
+                await safe_sleep(1, stop_event)
                 
             case AppType.NEUTRAL | _:
                 if page.window.always_on_top:
                     page.window.always_on_top = False
                     page.window.update()
+                await safe_sleep(0.5, stop_event)
     
     async def monitor_focus_async():
         """
@@ -146,7 +213,6 @@ async def main_ui(page: ft.Page):
                 )
                 page.update()
             await match_app_type(category)
-            await safe_sleep(1, stop_event)
         print("Monitor task stopped.")
     
     
