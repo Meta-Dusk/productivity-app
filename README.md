@@ -93,7 +93,7 @@ Basically, this app works by using a library that only provides the window's nam
 | -------- | -------- | -------- | -------- | -------- |
 | 1. | Stuck on Loading Screen. | This could be because your device is struggling to run the app. | Simply close then open the executable again. | Easily fixed. |
 | 2. | App Window Appears Stretched | This could be a `flet` rendering issue. | Click the fullscreen button, then exit fullscreen; any form of page resizing will fix this issue. | Easily fixed. |
-| 3. | After long usage of the app, it will just suddenly refuse to detect anything. | Restart the app. | Hopefully this issue has been fixed in `v0.3.1`. | Easily fixed. |
+| 3. | After long usage of the app, it will just suddenly refuse to detect anything. |  Hopefully this issue has been fixed in `v0.3.1`. | Restart the app. | Easily fixed. |
 | 4. | The app enters an indefinite loading screen post-startup. | This could be an issue originating from the new window data detection libraries. | End task the application. | This issue is quite concerning, and it looks like I haven't fixed this yet. |
 
 ### Issue Previews
@@ -107,6 +107,7 @@ Attempting to recreate **Issue No. 4**:
 ![productivity app stress test](https://github.com/user-attachments/assets/f8ac8ada-1e4c-4dae-9e81-273ca9feb719)
 
 > Based from testing, this issue is reproducible if you stress-test the application. For some reason, spamming interactions with it, will eventually enter this _zombie loading_ state. However, this usually doesn't happen, if you decide to **NOT** stress-test the application. _Stress-test on your own risk!_
+> This is also apparently easily reproducible if you open the config files whilst the app is open. For some reason, after some time has passed, the app will enter this _zombie loading_ state. This issue is not yet fixed in `v0.3.1`.
 
 ## Future Additions
 
