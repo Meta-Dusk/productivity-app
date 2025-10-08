@@ -94,7 +94,7 @@ Basically, this app works by using a library that only provides the window's nam
 | 1. | Stuck on Loading Screen. | This could be because your device is struggling to run the app. | Simply close then open the executable again. | Easily fixed. |
 | 2. | App Window Appears Stretched | This could be a `flet` rendering issue. | Click the fullscreen button, then exit fullscreen; any form of page resizing will fix this issue. | Easily fixed. |
 | 3. | After long usage of the app, it will just suddenly refuse to detect anything. | Restart the app. | Hopefully this issue has been fixed in `v0.3.1`. | Easily fixed. |
-| 4. | The app enters an indefinite loading screen post-startup. This could be an issue originating from the new window data detection libraries. | End task the application. | This issue is quite concerning, and it looks like I haven't fixed this yet. |
+| 4. | The app enters an indefinite loading screen post-startup. | This could be an issue originating from the new window data detection libraries. | End task the application. | This issue is quite concerning, and it looks like I haven't fixed this yet. |
 
 ### Issue Previews
 
