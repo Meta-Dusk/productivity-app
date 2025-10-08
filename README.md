@@ -4,11 +4,17 @@ This is for people who need an app to monitor whenever they `alt + tab` or just 
 
 ## Preview
 
-Below is what you'd expect from the app:
+Below are previews of some of the functionality the app offers:
 
-![productivity app preview (1)](https://github.com/user-attachments/assets/d8e18a0f-1fd3-4ca4-ad3b-ba250e3cebe7)
+### Animated Loading Screen
 
-> Sadly, this preview's in 240p so that it'll be under 10Mb. I'll be uploading better previews soon.
+![productivity app opening](https://github.com/user-attachments/assets/622f8a56-645a-43c5-8e84-6d1d5228056b)
+
+### Testing
+
+![productivity app testing 1](https://github.com/user-attachments/assets/29d7f768-3d58-4d63-b29f-3c473d68bbdb)
+
+![productivity app testing 2](https://github.com/user-attachments/assets/419b1d1d-b4de-4277-8d25-144040242a52)
 
 ## Features
 
@@ -92,9 +98,15 @@ Basically, this app works by using a library that only provides the window's nam
 
 ### Issue Previews
 
-Below is what Issue no. 4 looks like:
+Below is what **Issue No. 4** looks like:
 
-![productivity app error](https://github.com/user-attachments/assets/51732c25-9774-4673-9fb4-763f02d00d50)
+![productivity app bug](https://github.com/user-attachments/assets/7f0568ba-5bf7-48c0-9f25-7d10b28e4006)
+
+Attempting to recreate **Issue No. 4**:
+
+![productivity app stress test](https://github.com/user-attachments/assets/f8ac8ada-1e4c-4dae-9e81-273ca9feb719)
+
+> Based from testing, this issue is reproducible if you stress-test the application. For some reason, spamming interactions with it, will eventually enter this _zombie loading_ state. However, this usually doesn't happen, if you decide to **NOT** stress-test the application. _Stress-test on your own risk!_
 
 ## Future Additions
 
