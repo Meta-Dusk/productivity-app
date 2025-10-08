@@ -6,17 +6,20 @@ This is for people who need an app to monitor whenever they `alt + tab` or just 
 
 Below is what you'd expect from the app:
 
-> Placeholder
+![productivity app preview (1)](https://github.com/user-attachments/assets/d8e18a0f-1fd3-4ca4-ad3b-ba250e3cebe7)
+
+> Sadly, this preview's in 240p so that it'll be under 10Mb. I'll be uploading better previews soon.
 
 ## Features
 
 | Feature | Description | Implementation |
 | -------- | -------- | -------- |
 | **Window Check** | The app will check if look at "distracting" apps by checking the name of the executable. | Since version `0.1.1` |
-| **Times Distracted Counter** | Everytime you look at "distracting" apps, it will increment this counter. | Since version `0.1.1` |
+| **Distraction Timer** | Everytime you look at "distracting" apps, it will increment this timer. | Since version `0.1.1` |
 | **Customizable Keyword List** | You can add your own custom keywords to detect when using the app. | Since version `0.2.0` |
 | **Additional Menu Settings** | App behavior is now also customizable. | Since version `0.3.0` |
 | **Enhanced Keyword Matching System** | The config file that is used by the app to check for "productive" and "distracting" apps are now overhauled. It can fuzzy match, partial match, and more! | Since version `0.3.0` |
+| **Productivity Timer** | Everytime you look at "productive" apps, it will increment this timer. | Since version `0.3.0` |
 
 ## Installation
 
@@ -83,7 +86,15 @@ Basically, this app works by using a library that only provides the window's nam
 | No. | Issue | Description | Solution | Severity |
 | -------- | -------- | -------- | -------- | -------- |
 | 1. | Stuck on Loading Screen. | This could be because your device is struggling to run the app. | Simply close then open the executable again. | Easily fixed. |
-| 2. | App Window Appears Stretched | This could be a `flet` rendering issue. | Simply restart the app. | Easily fixed. |
+| 2. | App Window Appears Stretched | This could be a `flet` rendering issue. | Click the fullscreen button, then exit fullscreen; any form of page resizing will fix this issue. | Easily fixed. |
+| 3. | After long usage of the app, it will just suddenly refuse to detect anything. | Restart the app. | Hopefully this issue has been fixed in `v0.3.1`. | Easily fixed. |
+| 4. | The app enters an indefinite loading screen post-startup. This could be an issue originating from the new window data detection libraries. | End task the application. | This issue is quite concerning, and it looks like I haven't fixed this yet. |
+
+### Issue Previews
+
+Below is what Issue no. 4 looks like:
+
+![productivity app error](https://github.com/user-attachments/assets/51732c25-9774-4673-9fb4-763f02d00d50)
 
 ## Future Additions
 
