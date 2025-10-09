@@ -28,6 +28,8 @@ And since version `0.3.2`, an issue with these subprocesses that stemmed from ve
 
 ## Features
 
+### Already Implemented
+
 | Feature | Description | Implementation |
 | -------- | -------- | -------- |
 | **Window Check** | The app will check if look at "distracting" apps by checking the name of the executable. | Since version `0.1.1` |
@@ -36,6 +38,14 @@ And since version `0.3.2`, an issue with these subprocesses that stemmed from ve
 | **Additional Menu Settings** | App behavior is now also customizable. | Since version `0.3.0` |
 | **Enhanced Keyword Matching System** | The config file that is used by the app to check for "productive" and "distracting" apps are now overhauled. It can fuzzy match, partial match, and more! | Since version `0.3.0` |
 | **Productivity Timer** | Everytime you look at "productive" apps, it will increment this timer. | Since version `0.3.0` |
+
+### Future Additions
+
+| Feature | Description | Progress |
+| -------- | -------- | -------- |
+| **Customizable List for Used Keywords in Detection** | The user can edit a file to add their own keywords that they wish to detect. | 100% |
+| **Sound Effects** | A sound effect will play everytime the app catches the user _slacking off_. | 0% |
+| **Overhaul Keyword Matching System** | Rework the entire system to support multiple keyword checking systems, including the config file for it. | 100% |
 
 ## Installation
 
@@ -105,11 +115,3 @@ Basically, this app works by using a library that only provides the window's nam
 | 2. | App Window Appears Stretched | This could be a `flet` rendering issue. | Click the fullscreen button, then exit fullscreen; any form of page resizing will fix this issue. | Easily fixed. |
 | 3. | After long usage of the app, it will just suddenly refuse to detect anything. |  Hopefully this issue has been fixed in `v0.3.1`. | Restart the app. | Easily fixed. |
 | 4. | The app enters an indefinite loading screen post-startup. | This **was** an issue with the `window_helper.exe` subprocess. | End task the application. | This issue is quite concerning, but hopefully it's fixed in `v0.3.2`. |
-
-## Future Additions
-
-| Feature | Description | Progress |
-| -------- | -------- | -------- |
-| **Customizable List for Used Keywords in Detection** | The user can edit a file to add their own keywords that they wish to detect. | 100% |
-| **Sound Effects** | A sound effect will play everytime the app catches the user _slacking off_. | 0% |
-| **Overhaul Keyword Matching System** | Rework the entire system to support multiple keyword checking systems, including the config file for it. | 100% |
