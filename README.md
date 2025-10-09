@@ -83,7 +83,14 @@ Basically, this app works by using a library that only provides the window's nam
 | No. | Issue | Description | Solution | Severity |
 | -------- | -------- | -------- | -------- | -------- |
 | 1. | Stuck on Loading Screen. | This could be because your device is struggling to run the app. | Simply close then open the executable again. | Easily fixed. |
-| 2. | App Window Appears Stretched | This could be a `flet` rendering issue. | Simply restart the app. | Easily fixed. |
+| 2. | App Window Appears Stretched | This could be a `flet` rendering issue. | Simply restart the app. | Should be fixed now for `v0.3.3` |
+| 3. | An Error Message After Closing App | It could be an issue with the async loop not closing properly. | This message can just be ignored. | Negligible. |
+
+### Issue Preview
+
+![Issue No. 3 Screenshot]
+
+> Only appears sometimes if you suddenly exit the application. Or even could be because of mishandled subprocess termination. Will be fixed in the next version (`v0.3.4`).
 
 ## Future Additions
 
