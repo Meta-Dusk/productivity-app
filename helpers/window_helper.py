@@ -3,7 +3,7 @@ Window detection helper script. Build this then put the executable in ./src/bin/
 Build with:
 `pyinstaller --onefile --noconsole helpers/window_helper.py`
 """
-import json, sys, psutil, pythoncom
+import json, sys, psutil, pythoncom, signal
 import uiautomation as auto
 
 
@@ -35,15 +35,25 @@ def get_process_name(pid):
         return "unknown"
 
 
+def handle_sigterm(*_):
+    """Exit gracefully when terminated by parent process."""
+    sys.exit(0)
+
+
+signal.signal(signal.SIGTERM, handle_sigterm)
+
+
 if __name__ == "__main__":
     while True:
         try:
-            command = sys.stdin.readline().strip()
+            command = sys.stdin.readline()
             if not command:
-                break  # EOF or empty, exit loop
+                break  # Pipe closed (EOF)
+            command = command.strip()
+
             if command == "get_window_info":
                 info = get_active_window_info()
-                if info["pid"]:
+                if info.get("pid"):
                     info["process_name"] = get_process_name(info["pid"])
                 sys.stdout.write(json.dumps(info) + "\n")
                 sys.stdout.flush()
@@ -52,6 +62,11 @@ if __name__ == "__main__":
             else:
                 sys.stdout.write(json.dumps({"error": "Invalid command"}) + "\n")
                 sys.stdout.flush()
-        except Exception as e:
-            sys.stdout.write(json.dumps({"error": str(e)}) + "\n")
-            sys.stdout.flush()
+
+        except (OSError, ValueError) as e:
+            # Exit quietly if stdout or stdin is closed
+            if hasattr(e, "errno") and e.errno == 22:
+                break
+            break
+        except Exception:
+            break
