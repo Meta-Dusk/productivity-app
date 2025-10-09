@@ -20,7 +20,7 @@ Below are previews of some of the functionality the app offers:
 
 Starting from versions `0.3.1` and above, there will be a subprocess running in the background that the app uses, as can be seen below:
 
-<img width="1156" height="77" alt="image" src="https://github.com/user-attachments/assets/dec4b20b-6eef-44d5-ba63-dab0b7afab98"/>
+![subprocess error](https://github.com/user-attachments/assets/dec4b20b-6eef-44d5-ba63-dab0b7afab98)
 
 And since version `0.3.2`, an issue with these subprocesses that stemmed from version `0.3.0` is now _supposedly_ fixed.
 
