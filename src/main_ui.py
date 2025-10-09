@@ -1,16 +1,17 @@
 import flet as ft
 import asyncio
-from loader import load_app_lists, ensure_config_exists, reset_config
-from window import get_process_name, check_helper_dir, test_window_helper, WindowHelperManager
+from loader import load_app_lists, reset_config
+from window import get_process_name, WindowHelperManager
 from data_types import WindowInfo, AppType
 from utilities import safe_sleep, format_time
-from components import (exit_button, theme_button, minimize_button, preset_popup_menu_button,
-                        preset_appbar, simple_popup_menu_item, fullscreen_button,
-                        loading_indicator, loading_screen_container, DefaultText)
+from components import (exit_button, theme_button, minimize_button, preset_popup_menu_button, preset_appbar,
+                        simple_popup_menu_item, fullscreen_button, loading_indicator, loading_screen_container,
+                        DefaultText)
 from notifications import simple_notification, error_notif
 from smart_classifier import SmartClassifier
 from setup import fix_stretched_window
 from layouts import preset_win_drag_area, preset_column
+from error_checking import check_app_integrity
 
 
 # === MAIN FLET APP ===
@@ -18,7 +19,13 @@ async def main_ui(page: ft.Page):
     """The main UI/UX of the app."""
     # | Initial Setup |
     title = "Anti-Slacking Monitor"
+    window_names = load_app_lists()
+    stop_event = asyncio.Event()
+    distraction_time: int = 0
+    productive_time: int = 0
     loading_interval: float = 0.5
+    
+    # Loading Controls
     loading_text = DefaultText("Fixing Monitor Stretch...")
     progress_ring = loading_indicator()
     loading_controls = loading_screen_container(loading_text, progress_ring)
@@ -30,62 +37,14 @@ async def main_ui(page: ft.Page):
     )
     
     # Try to fix the stretched monitor issue on startup
-    await asyncio.sleep(loading_interval)
     await fix_stretched_window(page, center_page=True)
-    loading_text.set_text("Loading App Config...")
-    
-    # Check important files
-    try:
-        ensure_config_exists()
-        simple_notification(page, "Loaded config files.")
-    except Exception as e:
-        error_msg = "Error ensuring config files!"
-        print(f"[ERROR] {error_msg} {e}")
-        error_notif(error_msg)
-        
-    await asyncio.sleep(loading_interval)
-    loading_text.set_text("Checking Window Helper Directory...")
-    
-    # Check window helper availability
-    try:
-        if check_helper_dir():
-            await asyncio.sleep(loading_interval)
-            loading_text.set_text("Loading Window Helper...")
-            
-            # Run the blocking test in a background thread
-            # success = await asyncio.to_thread(test_window_helper)
-            
-            # if success:
-            #     simple_notification(page, "Loaded `window_helper` executable.")
-            # else:
-            #     error_notif(page, "Failed to load `window_helper`.")
-        else:
-            error_msg = "Missing `window_helper` executable!"
-            error_notif(page, error_msg)
-    except Exception as e:
-        error_msg = "Error testing `test_window_helper()`! Copied error to clipboard."
-        await page.clipboard.set(e)
-        print(f"[ERROR] {error_msg} {e}")
-        error_notif(page, error_msg, 4000)
-    await asyncio.sleep(loading_interval)
-    loading_text.emphasize("Finished! Starting App.")
-    progress_ring.visible = False
-    progress_ring.update()
-    await asyncio.sleep(loading_interval * 2)
-    page.controls.clear()
-    page.window.prevent_close = True
-    
-    
-    # Variables
-    window_names = load_app_lists()
-    stop_event = asyncio.Event()
-    distraction_time: int = 0
-    productive_time: int = 0
     
     # Class Setups
     classifier = SmartClassifier(window_names)
     window_manager = WindowHelperManager()
-    window_manager.start()
+    
+    # Check important files
+    await check_app_integrity(page, loading_text, window_manager, progress_ring, loading_interval)
     
     
     # | Event Handlers |
@@ -107,7 +66,7 @@ async def main_ui(page: ft.Page):
             case ft.WindowEventType.CLOSE:
                 await on_close(e)
             case _:
-                print(f"Window event -> {e.name}:{e.type}")
+                # print(f"Window event -> {e.type}")
                 pass
     
     def reset_config_btn_call(_):

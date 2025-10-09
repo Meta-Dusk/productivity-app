@@ -19,7 +19,7 @@ class WindowHelperManager:
             WindowInfo.PROCESS_ID: 0,
         }
         self.error = None
-
+        
     def _get_helper_path(self) -> Path:
         """Returns the correct path even when used in a built executable."""
         if getattr(sys, "frozen", False):
@@ -27,13 +27,19 @@ class WindowHelperManager:
         else:
             base_dir = Path(__file__).resolve().parent
         return base_dir / "assets" / "bin" / "window_helper.exe"
-
-    def start(self):
+    
+    def check_path(self) -> bool:
+        """Checks if the path of the built executable exists."""
+        if self._get_helper_path().exists():
+            return True
+        return False
+    
+    def start(self) -> bool:
         """Initialize the `WindowManagerHelper`."""
         if not self.helper_path.exists():
             self.error = f"Helper executable not found: {self.helper_path}"
             print(f"⚠️ {self.error}")
-            return
+            return False
 
         try:
             self.process = subprocess.Popen(
@@ -48,9 +54,11 @@ class WindowHelperManager:
             self.thread = threading.Thread(target=self._monitor_loop)
             self.thread.daemon = True
             self.thread.start()
+            return True
         except Exception as e:
             self.error = f"Failed to start helper: {e}"
             print(f"⚠️ {self.error}")
+            return False
 
     def _monitor_loop(self):
         """Handles the data expected from the window_helper subprocess."""
