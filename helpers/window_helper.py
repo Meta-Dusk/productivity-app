@@ -36,10 +36,22 @@ def get_process_name(pid):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "window_info":
-        info = get_active_window_info()
-        if info["pid"]:
-            info["process_name"] = get_process_name(info["pid"])
-        print(json.dumps(info))
-    else:
-        print(json.dumps({"error": "Invalid command"}))
+    while True:
+        try:
+            command = sys.stdin.readline().strip()
+            if not command:
+                break  # EOF or empty, exit loop
+            if command == "get_window_info":
+                info = get_active_window_info()
+                if info["pid"]:
+                    info["process_name"] = get_process_name(info["pid"])
+                sys.stdout.write(json.dumps(info) + "\n")
+                sys.stdout.flush()
+            elif command == "exit":
+                break
+            else:
+                sys.stdout.write(json.dumps({"error": "Invalid command"}) + "\n")
+                sys.stdout.flush()
+        except Exception as e:
+            sys.stdout.write(json.dumps({"error": str(e)}) + "\n")
+            sys.stdout.flush()

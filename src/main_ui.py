@@ -1,11 +1,12 @@
 import flet as ft
 import asyncio
 from loader import load_app_lists, ensure_config_exists, reset_config
-from window import get_active_window_info, get_process_name, check_helper_dir
+from window import get_process_name, check_helper_dir, test_window_helper, WindowHelperManager
 from data_types import WindowInfo, AppType
 from utilities import safe_sleep, format_time
 from components import (exit_button, theme_button, minimize_button, preset_popup_menu_button,
-                        preset_appbar, simple_popup_menu_item, fullscreen_button)
+                        preset_appbar, simple_popup_menu_item, fullscreen_button,
+                        loading_indicator, loading_screen_container)
 from notifications import simple_notification
 from smart_classifier import SmartClassifier
 
@@ -22,23 +23,8 @@ async def main_ui(page: ft.Page):
         text_align=ft.TextAlign.CENTER,
         color=ft.Colors.SECONDARY
     )
-    progress_ring = ft.ProgressRing(
-        color=ft.Colors.PRIMARY,
-        stroke_width=4, width=100, height=100
-    )
-    loading_controls = ft.WindowDragArea(
-        content=ft.Container(
-            content=ft.Column(
-                controls=[loading_text, progress_ring],
-                alignment=ft.MainAxisAlignment.CENTER,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=16, run_alignment=16
-            ),
-            expand=True, alignment=ft.Alignment.CENTER,
-            padding=8
-        ),
-        maximizable=False, expand=True
-    )
+    progress_ring = loading_indicator()
+    loading_controls = loading_screen_container(loading_text, progress_ring)
     page.add(loading_controls)
     page.appbar = preset_appbar(
         title=title, actions=[
@@ -68,13 +54,7 @@ async def main_ui(page: ft.Page):
             await asyncio.sleep(loading_interval)
             loading_text.value = "Loading Window Helper..."
             loading_text.update()
-            # ===================================================================
-            # I guess let's just not test the window helper then...
-            # For some reason, when running the function, it just hangs the app.
-            # Even though it should work just fine! Haiyah...
-            # Simply not calling it fixes the "issue" somehow.
-            # ===================================================================
-            # from window import test_window_helper
+            # # This function still doesn't work properly, so I'll just comment it out for now.
             # if test_window_helper():
             #     simple_notification("Loaded `window_helper` executable.", page)
         else:
@@ -105,6 +85,8 @@ async def main_ui(page: ft.Page):
     window_names = load_app_lists()
     stop_event = asyncio.Event()
     classifier = SmartClassifier(window_names)
+    window_manager = WindowHelperManager()
+    window_manager.start()
     distraction_time: int = 0
     productive_time: int = 0
     
@@ -195,7 +177,7 @@ async def main_ui(page: ft.Page):
         prev_title = ""
         while not stop_event.is_set():
             # Run blocking call in a background thread with COM initialized
-            info = await asyncio.to_thread(get_active_window_info)
+            info = await asyncio.to_thread(window_manager.get_latest_window_info)
             category = classifier.classify(win_info=info, process_getter=get_process_name)
             title = info.get(WindowInfo.NAME) or "Unknown Window"
             if title != prev_title:
