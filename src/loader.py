@@ -7,6 +7,7 @@ from enum import Enum
 from data_types import WindowNames, Productive, Distracting
 from smart_classifier import SmartClassifier
 from window import get_process_name, WindowHelperManager
+from functools import cache
 
 
 # === Initial Setup ===
@@ -61,16 +62,20 @@ def can_write_to_dir(path: Path) -> bool:
     """Return True if the process can write to the given directory."""
     try:
         path.mkdir(parents=True, exist_ok=True)
-        test_file = path / "_perm_test.tmp"
-        with open(test_file, "w", encoding="utf-8") as f:
-            f.write("test")
-        test_file.unlink(missing_ok=True)
+        if path.exists() and not os.access(path, os.W_OK):
+            return False
+
+        with tempfile.NamedTemporaryFile(dir=path, delete=True) as tmp:
+            tmp.write(b"test")
+            tmp.flush()
         return True
+
     except Exception as e:
         _log(f"can_write_to_dir({path}) failed: {e}", LogType.WARNING)
         return False
 
 
+@cache # Cache result just in case it'll be called multiple times
 def _choose_writable_root() -> Path:
     """Pick the best writable config directory (APPDATA -> HOME -> temp)."""
     appdata = os.getenv("APPDATA", None)
@@ -92,15 +97,15 @@ def _choose_writable_root() -> Path:
 
 
 CONFIG_ROOT = _choose_writable_root()
-CONFIG_FILE = "config.toml"
-CONFIG_DIR = CONFIG_ROOT / CONFIG_FILE
+CONFIG_FILE_NAME = "config.toml"
+CONFIG_PATH = CONFIG_ROOT / CONFIG_FILE_NAME
 
 
 def reset_config() -> bool:
     """Reset contents of the config file to the default TOML template."""
     try:
-        CONFIG_DIR.write_text(DEFAULT_CONFIG, encoding="utf-8")
-        _log(f"Config reset to default at: {CONFIG_DIR}", LogType.GOOD)
+        CONFIG_PATH.write_text(DEFAULT_CONFIG, encoding="utf-8")
+        _log(f"Config reset to default at: {CONFIG_PATH}", LogType.GOOD)
         return True
     except Exception as e:
         _log(f"Failed to reset config: {e}", LogType.WARNING)
@@ -109,22 +114,22 @@ def reset_config() -> bool:
 
 def ensure_config_exists() -> Path:
     """Ensure that a writable config file exists, and populate it if missing."""
-    global CONFIG_DIR, CONFIG_ROOT
+    global CONFIG_PATH, CONFIG_ROOT
 
     _log(f"ensure_config_exists() start. BASE_DIR={BASE_DIR} CONFIG_ROOT={CONFIG_ROOT}")
 
     CONFIG_ROOT.mkdir(parents=True, exist_ok=True)
-    CONFIG_DIR = CONFIG_ROOT / CONFIG_FILE
+    CONFIG_PATH = CONFIG_ROOT / CONFIG_FILE_NAME
 
     # Create config file if missing
-    if not CONFIG_DIR.exists():
+    if not CONFIG_PATH.exists():
         _log("Config file not found. Creating default one...", LogType.WARNING)
         reset_config()
     else:
-        _log(f"Config file found: {CONFIG_DIR}", LogType.GOOD)
+        _log(f"Config file found: {CONFIG_PATH}", LogType.GOOD)
 
-    _log(f"ensure_config_exists() complete. Using CONFIG_DIR={CONFIG_DIR}", LogType.GOOD)
-    return CONFIG_DIR
+    _log(f"ensure_config_exists() complete. Using CONFIG_PATH={CONFIG_PATH}", LogType.GOOD)
+    return CONFIG_PATH
 
 
 # === TOML-Based Config Loader ===
@@ -136,7 +141,7 @@ def load_app_lists() -> WindowNames:
     ensure_config_exists()
 
     try:
-        with CONFIG_DIR.open("rb") as f:
+        with CONFIG_PATH.open("rb") as f:
             data = tomllib.load(f)
 
         prod = data.get("PRODUCTIVE", {})

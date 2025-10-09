@@ -6,9 +6,11 @@ from data_types import WindowInfo, AppType
 from utilities import safe_sleep, format_time
 from components import (exit_button, theme_button, minimize_button, preset_popup_menu_button,
                         preset_appbar, simple_popup_menu_item, fullscreen_button,
-                        loading_indicator, loading_screen_container)
-from notifications import simple_notification
+                        loading_indicator, loading_screen_container, DefaultText)
+from notifications import simple_notification, error_notif
 from smart_classifier import SmartClassifier
+from setup import fix_stretched_window
+from layouts import preset_win_drag_area, preset_column
 
 
 # === MAIN FLET APP ===
@@ -17,12 +19,7 @@ async def main_ui(page: ft.Page):
     # | Initial Setup |
     title = "Anti-Slacking Monitor"
     loading_interval: float = 0.5
-    await page.window.center()
-    loading_text = ft.Text(
-        value="Loading App Config...", size=16,
-        text_align=ft.TextAlign.CENTER,
-        color=ft.Colors.SECONDARY
-    )
+    loading_text = DefaultText("Fixing Monitor Stretch...")
     progress_ring = loading_indicator()
     loading_controls = loading_screen_container(loading_text, progress_ring)
     page.add(loading_controls)
@@ -32,51 +29,49 @@ async def main_ui(page: ft.Page):
         ]
     )
     
+    # Try to fix the stretched monitor issue on startup
+    await asyncio.sleep(loading_interval)
+    await fix_stretched_window(page, center_page=True)
+    loading_text.set_text("Loading App Config...")
+    
     # Check important files
     try:
         ensure_config_exists()
-        simple_notification("Loaded config files.", page)
+        simple_notification(page, "Loaded config files.")
     except Exception as e:
         error_msg = "Error ensuring config files!"
         print(f"[ERROR] {error_msg} {e}")
-        simple_notification(
-            content=ft.Text(error_msg, color=ft.Colors.ERROR),
-            page=page, duration=2000, bgcolor=ft.Colors.ERROR_CONTAINER
-        )
+        error_notif(error_msg)
         
     await asyncio.sleep(loading_interval)
-    loading_text.value = "Checking Window Helper Directory..."
-    loading_text.update()
+    loading_text.set_text("Checking Window Helper Directory...")
     
     # Check window helper availability
     try:
         if check_helper_dir():
             await asyncio.sleep(loading_interval)
-            loading_text.value = "Loading Window Helper..."
-            loading_text.update()
-            # # This function still doesn't work properly, so I'll just comment it out for now.
-            # if test_window_helper():
-            #     simple_notification("Loaded `window_helper` executable.", page)
+            loading_text.set_text("Loading Window Helper...")
+            
+            # Run the blocking test in a background thread
+            success = await asyncio.to_thread(test_window_helper)
+
+            if success:
+                simple_notification(page, "Loaded `window_helper` executable.")
+            else:
+                error_notif(page, "Failed to load `window_helper`.")
         else:
             error_msg = "Missing `window_helper` executable!"
-            simple_notification(
-                content=ft.Text(error_msg, color=ft.Colors.ERROR),
-                page=page, duration=2000, bgcolor=ft.Colors.ERROR_CONTAINER
-            )
+            error_notif(page, error_msg)
     except Exception as e:
         error_msg = "Error testing `test_window_helper()`! Copied error to clipboard."
         await page.clipboard.set(e)
         print(f"[ERROR] {error_msg} {e}")
-        simple_notification(
-            content=ft.Text(error_msg, color=ft.Colors.ERROR),
-            page=page, duration=4000, bgcolor=ft.Colors.ERROR_CONTAINER
-        )
+        error_notif(page, error_msg, 4000)
     await asyncio.sleep(loading_interval)
-    loading_text.value = "Finished! Starting App."
-    loading_text.color = ft.Colors.PRIMARY
+    loading_text.emphasize("Finished! Starting App.")
     progress_ring.visible = False
-    page.update()
-    await asyncio.sleep(1)
+    progress_ring.update()
+    await asyncio.sleep(loading_interval * 2)
     page.controls.clear()
     page.window.prevent_close = True
     
@@ -84,18 +79,18 @@ async def main_ui(page: ft.Page):
     # Variables
     window_names = load_app_lists()
     stop_event = asyncio.Event()
+    distraction_time: int = 0
+    productive_time: int = 0
+    
+    # Class Setups
     classifier = SmartClassifier(window_names)
     window_manager = WindowHelperManager()
     window_manager.start()
-    distraction_time: int = 0
-    productive_time: int = 0
     
     
     # | Event Handlers |
     async def on_close(_):
-        """
-        Handles window closing + animations.
-        """
+        """Handles window closing + animations."""
         print("App is closing... Waiting for monitor to stop.")
         if not stop_event.is_set():
             stop_event.set()
@@ -112,33 +107,20 @@ async def main_ui(page: ft.Page):
             case ft.WindowEventType.CLOSE:
                 await on_close(e)
             case _:
+                print(f"Window event -> {e.name}:{e.type}")
                 pass
     
     def reset_config_btn_call(_):
-        """
-        Resets the config to its default values once called.
-        """
+        """Resets the config to its default values once called."""
         if reset_config():
-            simple_notification(
-                content=ft.Text("Successful reset of config file."),
-                page=page, duration=1500
-            )
+            simple_notification(page, "Successful reset of config file.", 1500)
         else:
-            simple_notification(
-                content=ft.Text(
-                    value="Failed to reset config file!",
-                    color=ft.Colors.ERROR
-                ),
-                page=page, duration=1500,
-                bgcolor=ft.Colors.ERROR_CONTAINER
-            )
+            error_notif(page, "Failed to reset config file!", 1500)
     
     
     # | Events |
     async def match_app_type(app_type: AppType):
-        """
-        Event handler for detected window type from monitor task.
-        """
+        """Event handler for detected window type from monitor task."""
         nonlocal distraction_time, productive_time
         match app_type:
             case AppType.PRODUCTIVE:
@@ -170,9 +152,7 @@ async def main_ui(page: ft.Page):
                 await safe_sleep(0.5, stop_event)
     
     async def monitor_focus_async():
-        """
-        This is the main looping function for window detection and classification.
-        """
+        """This is the main looping function for window detection and classification."""
         nonlocal distraction_time
         prev_title = ""
         while not stop_event.is_set():
@@ -265,23 +245,14 @@ async def main_ui(page: ft.Page):
         ft.Text("Status:", size=16),
         category_text,
     ]
-    column = ft.Column(
-        controls=controls,
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        spacing=4
-    )
+    column = preset_column(controls)
     container = ft.Container(
         content=column,
         padding=16, border_radius=16, expand=True,
-        bgcolor=ft.Colors.with_opacity(0.1, ft.Colors.SURFACE_CONTAINER),
+        bgcolor=ft.Colors.SURFACE_CONTAINER,
         alignment=ft.Alignment.CENTER,
     )
-    form = ft.WindowDragArea(
-        content=container, maximizable=False, expand=True,
-        opacity=0, offset=ft.Offset(0, -1),
-        animate_opacity=ft.Animation(1000, ft.AnimationCurve.EASE_IN_OUT),
-        animate_offset=ft.Animation(1000, ft.AnimationCurve.EASE_IN_OUT)
-    )
+    form = preset_win_drag_area(container)
     
     
     # | Page Stuff + Animation |

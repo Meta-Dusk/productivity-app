@@ -113,9 +113,9 @@ def check_helper_dir() -> bool:
     """Checks for the window helper executable."""
     manager = WindowHelperManager()
     helper_path = manager._get_helper_path()
-    print(f"[DEBUG] Looking for `window_helper` at: {helper_path}")
+    print(f"[DEBUG] 🔎 Looking for `window_helper` at: {helper_path}")
     path_exists = helper_path.exists()
-    print(f"[DEBUG] {"Found" if path_exists else "Missing"} `window_helper` executable.")
+    print(f"[DEBUG] ✅ {"Found" if path_exists else "Missing"} `window_helper` executable.")
     return path_exists
 
 def test_window_helper(verbose: bool = True) -> bool:

@@ -1,6 +1,6 @@
 [project]
 name = "ProductivityApp"
-version = "0.3.2"
+version = "0.3.3"
 description = "An App for Checking Your Productivity"
 readme = "README.md"
 requires-python = ">=3.13"
