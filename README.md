@@ -20,9 +20,11 @@ Below are previews of some of the functionality the app offers:
 
 Starting from versions `0.3.1` and above, there will be a subprocess running in the background that the app uses, as can be seen below:
 
-![subprocess error](https://github.com/user-attachments/assets/dec4b20b-6eef-44d5-ba63-dab0b7afab98)
+![window_helper subprocess running in background](https://github.com/user-attachments/assets/ba6ae1e0-7023-4f7c-9c6e-2f40cd9861b5)
 
-And since version `0.3.2`, an issue with these subprocesses that stemmed from version `0.3.0` is now _supposedly_ fixed.
+> This subprocess has been updated in `v0.3.4`!
+
+And since version `0.3.2`, an issue with these subprocesses that stemmed from version `0.3.0` **should** be fixed.
 
 > The issue was how the handling of the subprocess hanged the app, as it was running and stopping its process **every second**, which **isn't very good**. The fix? Just make sure to make it run it and keep it in the background, then let it send updates once a second. With that, a new system has been made to handle the data and the subprocess for the expected data.
 
@@ -113,10 +115,3 @@ Basically, this app works by using a library that only provides the window's nam
 | -------- | -------- | -------- | -------- | -------- |
 | 1. | Stuck on Loading Screen. | This could be because your device is struggling to run the app. | Simply close then open the executable again. | Easily fixed. |
 | 2. | App Window Appears Stretched | This could be a `flet` rendering issue. | Simply restart the app. | Should be fixed now for `v0.3.3` |
-| 3. | An Error Message After Closing App | It could be an issue with the async loop not closing properly. | This message can just be ignored. | Negligible. |
-
-### Issue Preview
-
-![issue no. 3 error screenshot](https://github.com/user-attachments/assets/1e88f843-3600-4aa6-8415-7c59f3bc0be5)
-
-> Only appears sometimes if you suddenly exit the application. Or even could be because of mishandled subprocess termination. Will be fixed in the next version (`v0.3.4`).
