@@ -16,6 +16,16 @@ Below are previews of some of the functionality the app offers:
 
 ![productivity app testing 2](https://github.com/user-attachments/assets/419b1d1d-b4de-4277-8d25-144040242a52)
 
+### Additional Remarks
+
+Starting from versions `0.3.1` and above, there will be a subprocess running in the background that the app uses, as can be seen below:
+
+<img width="1156" height="77" alt="image" src="https://github.com/user-attachments/assets/dec4b20b-6eef-44d5-ba63-dab0b7afab98"/>
+
+And since version `0.3.2`, an issue with these subprocesses that stemmed from version `0.3.0` is now _supposedly_ fixed.
+
+> The issue was how the handling of the subprocess hanged the app, as it was running and stopping its process **every second**, which **isn't very good**. The fix? Just make sure to make it run it and keep it in the background, then let it send updates once a second. With that, a new system has been made to handle the data and the subprocess for the expected data.
+
 ## Features
 
 | Feature | Description | Implementation |
@@ -94,20 +104,7 @@ Basically, this app works by using a library that only provides the window's nam
 | 1. | Stuck on Loading Screen. | This could be because your device is struggling to run the app. | Simply close then open the executable again. | Easily fixed. |
 | 2. | App Window Appears Stretched | This could be a `flet` rendering issue. | Click the fullscreen button, then exit fullscreen; any form of page resizing will fix this issue. | Easily fixed. |
 | 3. | After long usage of the app, it will just suddenly refuse to detect anything. |  Hopefully this issue has been fixed in `v0.3.1`. | Restart the app. | Easily fixed. |
-| 4. | The app enters an indefinite loading screen post-startup. | This could be an issue originating from the new window data detection libraries. | End task the application. | This issue is quite concerning, and it looks like I haven't fixed this yet. |
-
-### Issue Previews
-
-Below is what **Issue No. 4** looks like:
-
-![productivity app bug](https://github.com/user-attachments/assets/7f0568ba-5bf7-48c0-9f25-7d10b28e4006)
-
-Attempting to recreate **Issue No. 4**:
-
-![productivity app stress test](https://github.com/user-attachments/assets/f8ac8ada-1e4c-4dae-9e81-273ca9feb719)
-
-> Based from testing, this issue is reproducible if you stress-test the application. For some reason, spamming interactions with it, will eventually enter this _zombie loading_ state. However, this usually doesn't happen, if you decide to **NOT** stress-test the application. _Stress-test on your own risk!_
-> This is also apparently easily reproducible if you open the config files whilst the app is open. For some reason, after some time has passed, the app will enter this _zombie loading_ state. This issue is not yet fixed in `v0.3.1`.
+| 4. | The app enters an indefinite loading screen post-startup. | This **was** an issue with the `window_helper.exe` subprocess. | End task the application. | This issue is quite concerning, but hopefully it's fixed in `v0.3.2`. |
 
 ## Future Additions
 
