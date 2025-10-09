@@ -117,6 +117,6 @@ Basically, this app works by using a library that only provides the window's nam
 
 ### Issue Preview
 
-![Issue No. 3 Screenshot]
+![issue no. 3 error screenshot](https://github.com/user-attachments/assets/1e88f843-3600-4aa6-8415-7c59f3bc0be5)
 
 > Only appears sometimes if you suddenly exit the application. Or even could be because of mishandled subprocess termination. Will be fixed in the next version (`v0.3.4`).
