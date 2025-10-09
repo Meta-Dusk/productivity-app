@@ -1,6 +1,6 @@
 [project]
 name = "ProductivityApp"
-version = "0.3.2"
+version = "0.3.3"
 description = "An App for Checking Your Productivity"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -26,7 +26,7 @@ copyright = "Copyright (C) 2025 MetaDusk"
 compile_app = true
 compile_packages = true
 cleanup_on_compile = true
-build_number = 1
+build_number = 2
 
 [tool.flet.assets]
 include = [

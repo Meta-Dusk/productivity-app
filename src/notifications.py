@@ -3,10 +3,15 @@ from typing import Optional
 
 
 def simple_notification(
-    content: ft.StrOrControl, page: ft.Page,
+    page: ft.Page,
+    content: ft.StrOrControl,
+    duration: int = 1000,
     bgcolor: Optional[ft.ColorValue] = None,
-    duration: int = 1000
-):
+) -> None:
+    """
+    Shows a `snackbar` by appending it to the `overlay`, then
+    automatically removes itself after dismissal.
+    """
     snackbar = ft.SnackBar(
         content=content, open=True,
         duration=duration, behavior=ft.SnackBarBehavior.FLOATING,
@@ -14,3 +19,15 @@ def simple_notification(
         bgcolor=bgcolor
     )
     page.overlay.append(snackbar)
+
+def error_notif(
+    page: ft.Page,
+    text: str = "ERROR",
+    duration: int = 2000
+) -> None:
+    """A preset notification for showing errors."""
+    simple_notification(
+        content=ft.Text(text, color=ft.Colors.ERROR),
+        page=page, duration=duration,
+        bgcolor=ft.Colors.ERROR_CONTAINER
+    )

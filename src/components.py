@@ -1,7 +1,7 @@
 import asyncio, os
 import flet as ft
 from typing import Optional
-from loader import CONFIG_DIR, CONFIG_ROOT, LOG_FILE, LOG_DIR
+from loader import CONFIG_PATH, CONFIG_ROOT, LOG_FILE, LOG_DIR
 
 
 # === COMPONENT PRESETS ===
@@ -46,6 +46,34 @@ def simple_popup_menu_item(
         on_click=on_click, checked=checked
     )
     return popup_menu_item
+
+class DefaultText(ft.Text):
+    """Default text usually used for loading screens."""
+    def __init__(
+        self, value: str, *,
+        size: ft.Number = 16,
+        text_align: ft.TextAlign = ft.TextAlign.CENTER,
+        color: ft.ColorValue = ft.Colors.SECONDARY
+    ):
+        super().__init__(value=value, size=size, text_align=text_align, color=color)
+
+    def set_text(self, value: str) -> None:
+        self.value = value
+        if self.page:
+            self.update()
+    
+    def emphasize(
+        self, new_value: Optional[str], *,
+        new_size: Optional[int] = 24,
+        new_weight: Optional[ft.FontWeight] = ft.FontWeight.BOLD,
+        new_color: Optional[ft.ColorValue] = ft.Colors.PRIMARY
+    ) -> None:
+        self.value = new_value
+        self.size = new_size
+        self.weight = new_weight
+        self.color = new_color
+        if self.page:
+            self.update()
 
 
 # === PRE-ASSEMBLED COMPONENTS ===
@@ -143,7 +171,7 @@ def preset_popup_menu_button(new_menu_items: list[ft.PopupMenuItem]) -> ft.Popup
         items=[
             simple_popup_menu_item(
                 text="Edit Config", icon=ft.Icons.FILE_OPEN,
-                on_click=lambda _: os.startfile(CONFIG_DIR),
+                on_click=lambda _: os.startfile(CONFIG_PATH),
                 color=ft.Colors.PRIMARY
             ),
             simple_popup_menu_item(
@@ -178,7 +206,7 @@ def preset_appbar(title: str, actions: list[ft.Control]) -> ft.AppBar:
         actions=actions,
         bgcolor=ft.Colors.SURFACE_CONTAINER_HIGHEST,
         actions_padding=4, title_spacing=4,
-        shape=ft.RoundedRectangleBorder(radius=5),
+        # shape=ft.RoundedRectangleBorder(radius=5),
         leading_width=8, leading=ft.Container()
     )
     
