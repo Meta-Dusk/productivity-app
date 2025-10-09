@@ -19,6 +19,7 @@ class WindowHelperManager:
             WindowInfo.PROCESS_ID: 0,
         }
         self.error = None
+        self.data_interval: float = 1
         
     def _get_helper_path(self) -> Path:
         """Returns the correct path even when used in a built executable."""
@@ -62,12 +63,19 @@ class WindowHelperManager:
 
     def _monitor_loop(self):
         """Handles the data expected from the window_helper subprocess."""
-        while self.running:
-            try:
-                self.process.stdin.write("get_window_info\n")
-                self.process.stdin.flush()
-                output = self.process.stdout.readline().strip()
-                if output:
+        try:
+            while self.running and self.process and self.process.poll() is None:
+                try:
+                    # Try to send a command only if stdin is still open
+                    if self.process.stdin:
+                        self.process.stdin.write("get_window_info\n")
+                        self.process.stdin.flush()
+
+                    output = self.process.stdout.readline().strip()
+                    if not output:
+                        # EOF or closed pipe
+                        break
+
                     data = json.loads(output)
                     self.latest_data = {
                         WindowInfo.NAME: data.get("name"),
@@ -75,18 +83,25 @@ class WindowHelperManager:
                         WindowInfo.PROCESS_ID: data.get("pid"),
                     }
                     self.data_queue.put(self.latest_data)
-            except Exception as e:
-                self.error = str(e)
-                print(f"⚠️ Helper error: {e}")
-                break
-            time.sleep(1)  # Fetch every second
+                except (BrokenPipeError, OSError, ValueError) as e:
+                    self.error = f"Pipe closed or invalid: {e}"
+                    break
 
-        # Cleanup on exit
-        if self.process:
-            self.process.stdin.write("exit\n")
-            self.process.stdin.flush()
-            self.process.terminate()
-            self.process.wait(timeout=5)
+                time.sleep(self.data_interval)  # Fetch every data_interval
+        finally:
+            # Cleanup on exit
+            if self.process:
+                try:
+                    if self.process.stdin:
+                        self.process.stdin.write("exit\n")
+                        self.process.stdin.flush()
+                except Exception:
+                    pass
+                try:
+                    self.process.terminate()
+                    self.process.wait(timeout=3)
+                except Exception:
+                    pass
 
     def get_latest_window_info(self) -> Dict[WindowInfo, Optional[str | int]]:
         """Get the most recent window info without blocking."""
@@ -102,10 +117,22 @@ class WindowHelperManager:
         }
 
     def stop(self):
+        """Gracefully stop the monitor and helper subprocess."""
         self.running = False
-        if self.thread:
-            self.thread.join(timeout=10)
-
+        if self.thread and self.thread.is_alive():
+            self.thread.join(timeout=5)
+        if self.process:
+            try:
+                if self.process.stdin:
+                    self.process.stdin.write("exit\n")
+                    self.process.stdin.flush()
+            except Exception:
+                pass
+            try:
+                self.process.terminate()
+                self.process.wait(timeout=3)
+            except Exception:
+                pass
 
 # === MAIN FUNCTIONS ===
 # Note: get_active_window_info() is now replaced by .get_latest_window_info()

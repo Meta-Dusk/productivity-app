@@ -53,6 +53,7 @@ async def main_ui(page: ft.Page):
         print("App is closing... Waiting for monitor to stop.")
         if not stop_event.is_set():
             stop_event.set()
+        window_manager.stop()
         form.opacity = 0
         form.offset = ft.Offset(0, -1)
         form.update()
