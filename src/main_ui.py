@@ -53,12 +53,12 @@ async def main_ui(page: ft.Page):
             loading_text.set_text("Loading Window Helper...")
             
             # Run the blocking test in a background thread
-            success = await asyncio.to_thread(test_window_helper)
-
-            if success:
-                simple_notification(page, "Loaded `window_helper` executable.")
-            else:
-                error_notif(page, "Failed to load `window_helper`.")
+            # success = await asyncio.to_thread(test_window_helper)
+            
+            # if success:
+            #     simple_notification(page, "Loaded `window_helper` executable.")
+            # else:
+            #     error_notif(page, "Failed to load `window_helper`.")
         else:
             error_msg = "Missing `window_helper` executable!"
             error_notif(page, error_msg)
