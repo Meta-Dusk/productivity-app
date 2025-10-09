@@ -6,7 +6,7 @@ from utilities import get_date
 from enum import Enum
 from data_types import WindowNames, Productive, Distracting
 from smart_classifier import SmartClassifier
-from window import get_active_window_info, get_process_name
+from window import get_process_name, WindowHelperManager
 
 
 # === Initial Setup ===
@@ -170,7 +170,8 @@ def test():
     ensure_config_exists()
     data_list = load_app_lists()
     classifier = SmartClassifier(data_list)
-    info = get_active_window_info()
+    window_manager = WindowHelperManager()
+    info = window_manager.get_latest_window_info()
     result = classifier.classify(win_info=info, process_getter=get_process_name)
     
     print_items("\nProductive Apps", data_list.productive.apps)

@@ -181,3 +181,28 @@ def preset_appbar(title: str, actions: list[ft.Control]) -> ft.AppBar:
         shape=ft.RoundedRectangleBorder(radius=5),
         leading_width=8, leading=ft.Container()
     )
+    
+# | Loading Screen |
+def loading_indicator() -> ft.ProgressRing:
+    return ft.ProgressRing(
+        color=ft.Colors.PRIMARY,
+        stroke_width=4, width=100, height=100
+    )
+
+def loading_screen_container(
+    loading_text: ft.Text, progress_ring: ft.ProgressRing
+) -> ft.WindowDragArea:
+    loading_controls = ft.WindowDragArea(
+        content=ft.Container(
+            content=ft.Column(
+                controls=[loading_text, progress_ring],
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=16, run_alignment=16
+            ),
+            expand=True, alignment=ft.Alignment.CENTER,
+            padding=8
+        ),
+        maximizable=False, expand=True
+    )
+    return loading_controls

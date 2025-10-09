@@ -1,6 +1,6 @@
 [project]
 name = "ProductivityApp"
-version = "0.3.1"
+version = "0.3.2"
 description = "An App for Checking Your Productivity"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -13,11 +13,9 @@ dependencies = [
   "flet==0.70.0.dev6214",
   "flet-desktop==0.70.0.dev6214",
   "flet-cli==0.70.0.dev6214",
-  "pip>=25.2", # Only needed since flet needs it
   "uiautomation==2.0.29",
   "psutil==7.1.0",
   "pywin32>=311",
-  "pyinstaller>=6.16.0",
 ]
 
 [tool.flet]
@@ -53,5 +51,6 @@ message = "Loading... Please wait."
 
 [dependency-groups]
 dev = [
+  "pyinstaller>=6.16.0",
   "tomlkit>=0.13.3",
 ]
