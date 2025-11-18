@@ -1,4 +1,3 @@
-; Inno Setup Script for MikuMiku App
 ; Safe to share publicly — contains no private data
 ; Paths are relative, version is auto-updated by build script
 
