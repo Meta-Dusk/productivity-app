@@ -1,21 +1,19 @@
 [project]
 name = "ProductivityApp"
-version = "0.3.4"
+version = "0.3.5"
 description = "An App for Checking Your Productivity"
 readme = "README.md"
 requires-python = ">=3.13"
-authors = [
-  { name = "MetaDusk", email = "andredcxxv@gmail.com" }
-]
+authors = [{ name = "MetaDusk", email = "andredcxxv@gmail.com" }]
 license = { text = "AGPL-3.0" }
 
 dependencies = [
-  "flet==0.70.0.dev6214",
-  "flet-desktop==0.70.0.dev6214",
-  "flet-cli==0.70.0.dev6214",
   "uiautomation==2.0.29",
   "psutil==7.1.0",
   "pywin32>=311",
+  "flet==0.70.0.dev6709",
+  "flet-cli==0.70.0.dev6709",
+  "flet-desktop==0.70.0.dev6709",
 ]
 
 [tool.flet]
@@ -29,10 +27,7 @@ cleanup_on_compile = true
 build_number = 1
 
 [tool.flet.assets]
-include = [
-  "images/**",
-  "bin/**"
-]
+include = ["images/**", "bin/**"]
 
 [tool.flet.splash]
 color = "#ffffff"
@@ -50,7 +45,4 @@ show = true
 message = "Loading... Please wait."
 
 [dependency-groups]
-dev = [
-  "pyinstaller>=6.16.0",
-  "tomlkit>=0.13.3",
-]
+dev = ["pyinstaller>=6.16.0", "tomlkit>=0.13.3"]
