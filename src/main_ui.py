@@ -9,7 +9,6 @@ from components import (exit_button, theme_button, minimize_button, preset_popup
                         DefaultText)
 from notifications import simple_notification, error_notif
 from smart_classifier import SmartClassifier
-from setup import fix_stretched_window
 from layouts import preset_win_drag_area, preset_column
 from error_checking import check_app_integrity
 
@@ -36,8 +35,7 @@ async def main_ui(page: ft.Page):
         ]
     )
     
-    # Try to fix the stretched monitor issue on startup
-    await fix_stretched_window(page, center_page=True)
+    await page.window.center()
     
     # Class Setups
     classifier = SmartClassifier(window_names)
