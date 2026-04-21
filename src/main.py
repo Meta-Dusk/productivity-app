@@ -10,5 +10,4 @@ async def main(page: ft.Page):
     await main_ui(page)
     
     
-if __name__ == "__main__":
-    ft.run(main=main, before_main=before_main_ui)
+ft.run(main=main, before_main=before_main_ui)

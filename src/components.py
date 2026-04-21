@@ -1,19 +1,14 @@
-import asyncio, os
+import os
 import flet as ft
 from typing import Optional
 from loader import CONFIG_PATH, CONFIG_ROOT, LOG_FILE, LOG_DIR
 
 
 # === COMPONENT PRESETS ===
-def simple_icon_button(
-    icon: ft.IconDataOrControl,
-    icon_color: ft.ColorValue = ft.Colors.PRIMARY,
-    on_click: Optional[ft.ControlEventHandler[ft.IconButton]] = None
-) -> ft.IconButton:
+@ft.control
+class PrimaryIconButton(ft.IconButton):
     """Literally just an `IconButton` with a default `icon_color`."""
-    return ft.IconButton(
-        icon=icon, icon_color=icon_color, on_click=on_click
-    )
+    icon_color: Optional[ft.ColorValue] = ft.Colors.PRIMARY
 
 def simple_popup_menu_item(
     text: str, color: ft.ColorValue, icon: ft.IconData,
@@ -38,6 +33,7 @@ def simple_popup_menu_item(
         """`e` only has `name="click"` and `data: bool`"""
         popup_menu_item.checked = e.data
         popup_menu_item.update()
+        
     if checked is not None and on_click is None:
         on_click=default_on_click
     popup_menu_item = ft.PopupMenuItem(
@@ -47,20 +43,17 @@ def simple_popup_menu_item(
     )
     return popup_menu_item
 
+@ft.control
 class DefaultText(ft.Text):
     """Default text usually used for loading screens."""
-    def __init__(
-        self, value: str, *,
-        size: ft.Number = 16,
-        text_align: ft.TextAlign = ft.TextAlign.CENTER,
-        color: ft.ColorValue = ft.Colors.SECONDARY
-    ):
-        super().__init__(value=value, size=size, text_align=text_align, color=color)
+    size: Optional[ft.Number] = 16
+    text_align: ft.TextAlign = ft.TextAlign.CENTER
+    color: Optional[ft.ColorValue] = ft.Colors.SECONDARY
 
     def set_text(self, value: str) -> None:
         self.value = value
-        if self.page:
-            self.update()
+        try: self.update()
+        except RuntimeError: pass
     
     def emphasize(
         self, new_value: Optional[str], *,
@@ -72,8 +65,8 @@ class DefaultText(ft.Text):
         self.size = new_size
         self.weight = new_weight
         self.color = new_color
-        if self.page:
-            self.update()
+        try: self.update()
+        except RuntimeError: pass
 
 
 # === PRE-ASSEMBLED COMPONENTS ===
@@ -96,18 +89,19 @@ def fullscreen_button(page: ft.Page) -> ft.IconButton:
         page.window.full_screen = not page.window.full_screen
         
     page.on_resize = lambda _: update_icon()
-    btn = simple_icon_button(
-        icon=set_icon(), on_click=on_click
-    )
+    btn = PrimaryIconButton(set_icon(), on_click=on_click)
     return btn
 
-def minimize_button(page: ft.Page) -> ft.IconButton:
+@ft.control
+class WindowMinimizeButton(PrimaryIconButton):
     """Handles the window minimizing functionality."""
-    def on_click(_):
-        page.window.minimized = True
-    return simple_icon_button(
-        icon=ft.Icons.MINIMIZE, on_click=on_click
-    )
+    icon: Optional[ft.IconDataOrControl] = ft.Icons.MINIMIZE
+    
+    def init(self):
+        self.on_click = self._on_click
+    
+    def _on_click(self, e: ft.Event[ft.IconButton]) -> None:
+        e.page.window.minimized = True
 
 def theme_button(page: ft.Page) -> ft.AnimatedSwitcher:
     """An animated theme-swapping button."""
@@ -119,11 +113,13 @@ def theme_button(page: ft.Page) -> ft.AnimatedSwitcher:
         else:
             page.theme_mode = ft.ThemeMode.DARK
             icon_btn.icon = ft.Icons.DARK_MODE
-        icon_btn.update()
+        page.update()
+        
     if page.theme_mode == ft.ThemeMode.DARK:
         icon = ft.Icons.DARK_MODE
     else:
         icon = ft.Icons.LIGHT_MODE
+        
     btn = ft.AnimatedSwitcher(
         content=ft.IconButton(
             icon=icon, icon_color=ft.Colors.PRIMARY,
@@ -136,24 +132,21 @@ def theme_button(page: ft.Page) -> ft.AnimatedSwitcher:
     )
     return btn
 
-def exit_button(
-    page: ft.Page,
-    on_click: Optional[ft.ControlEventHandler[ft.IconButton]] = None
-) -> ft.IconButton:
+@ft.control
+class ExitButton(PrimaryIconButton):
     """
     A simple exit button. If `on_click` is `None`, then it will be set
     to a function that calls the `close()` method from the `page`'s
     `window`.
     """
-    if on_click is None:
-        on_click = lambda _: asyncio.create_task(
-            coro=page.window.close(),
-            name="Exit Button -> Closing Window"
-        )
-    return simple_icon_button(
-        icon=ft.Icons.CLOSE,
-        on_click=on_click
-    )
+    icon: Optional[ft.IconDataOrControl] = ft.Icons.CLOSE
+    
+    def init(self):
+        if self.on_click is None:
+            self.on_click = self.close_window
+    
+    async def close_window(e: ft.Event[ft.IconButton]):
+        await e.page.window.close()
 
 def preset_popup_menu_button(new_menu_items: list[ft.PopupMenuItem]) -> ft.PopupMenuButton:
     """

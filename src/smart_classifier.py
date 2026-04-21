@@ -1,6 +1,6 @@
 import re, difflib, unicodedata
 from typing import Optional, Callable
-from data_types import AppType, WindowInfo, WindowNames
+from core.data_types import AppType, WindowInfo, WindowNames
 
 
 # ---- Helper normalizers ----
@@ -154,29 +154,18 @@ class SmartClassifier:
         return score
 
     # ----- public classify API -----
-    def classify(
-        self, win_info: dict[WindowInfo, Optional[str | int]],
-        *, process_getter: Callable[[int], str]
-    ) -> AppType:
+    def classify(self, win_info: dict[WindowInfo, Optional[str | int]]) -> AppType:
         """
         Args:
-            win_info (dict): Dict-like with keys of `WindowInfo` containing `NAME` and `PROCESS_ID` (or process name).
-            process_getter (Callable): Callable that given a process id returns a process name (use `get_process_name()`).
+            win_info (dict): Dict-like with keys of `WindowInfo` containing `NAME` and `PROCESS_ID`
         
         Returns:
             AppType: The classification of the currently focused window process.
         """
         title = (win_info.get(WindowInfo.NAME) or "")  # raw title
-        proc_id = win_info.get(WindowInfo.PROCESS_ID)
-        # accept a string process name directly if provided; otherwise, resolve via `process_getter()`
-        proc_name = ""
-        if isinstance(proc_id, str):
-            proc_name = proc_id
-        else:
-            try:
-                proc_name = process_getter(proc_id)
-            except Exception:
-                proc_name = ""
+        proc_name = win_info.get(WindowInfo.PROCESS_NAME)
+        if not isinstance(proc_name, str):
+            proc_name = ""
 
         # compute scores
         prod_score = 0.0

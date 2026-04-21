@@ -1,12 +1,11 @@
-import sys, os, tempfile
-import tomllib  # Python 3.11+ (use `import tomli` for earlier versions)
+import sys, os, tempfile, tomllib
 from pathlib import Path
 from default_config import DEFAULT_CONFIG
 from utilities import get_date
 from enum import Enum
-from data_types import WindowNames, Productive, Distracting
+from core.data_types import WindowNames, Productive, Distracting
 from smart_classifier import SmartClassifier
-from window import get_process_name, WindowHelperManager
+from window import WindowHelperManager
 from functools import cache
 
 
@@ -177,7 +176,7 @@ def test():
     classifier = SmartClassifier(data_list)
     window_manager = WindowHelperManager()
     info = window_manager.get_latest_window_info()
-    result = classifier.classify(win_info=info, process_getter=get_process_name)
+    result = classifier.classify(info)
     
     print_items("\nProductive Apps", data_list.productive.apps)
     print_items("Productive Keywords", data_list.productive.keywords)

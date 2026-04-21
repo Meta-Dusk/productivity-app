@@ -1,7 +1,7 @@
 import json, subprocess, sys, threading, queue, time
 from pathlib import Path
-from typing import Optional, Dict
-from data_types import WindowInfo
+from typing import Optional, Any
+from core.data_types import WindowInfo
 
 
 # === SUBPROCESS MANAGER ===
@@ -17,6 +17,7 @@ class WindowHelperManager:
             WindowInfo.NAME: None,
             WindowInfo.CLASS_NAME: None,
             WindowInfo.PROCESS_ID: 0,
+            WindowInfo.PROCESS_NAME: None
         }
         self.error = None
         self.data_interval: float = 1
@@ -76,11 +77,12 @@ class WindowHelperManager:
                         # EOF or closed pipe
                         break
 
-                    data = json.loads(output)
+                    data: dict[str, Any] = json.loads(output)
                     self.latest_data = {
                         WindowInfo.NAME: data.get("name"),
                         WindowInfo.CLASS_NAME: data.get("class_name"),
                         WindowInfo.PROCESS_ID: data.get("pid"),
+                        WindowInfo.PROCESS_NAME: data.get("process_name")
                     }
                     self.data_queue.put(self.latest_data)
                 except (BrokenPipeError, OSError, ValueError) as e:
@@ -103,7 +105,7 @@ class WindowHelperManager:
                 except Exception:
                     pass
 
-    def get_latest_window_info(self) -> Dict[WindowInfo, Optional[str | int]]:
+    def get_latest_window_info(self) -> dict[WindowInfo, Optional[str | int]]:
         """Get the most recent window info without blocking."""
         try:
             while not self.data_queue.empty():
@@ -114,6 +116,7 @@ class WindowHelperManager:
             WindowInfo.NAME: None,
             WindowInfo.CLASS_NAME: None,
             WindowInfo.PROCESS_ID: 0,
+            WindowInfo.PROCESS_NAME: None
         }
 
     def stop(self):
@@ -133,15 +136,6 @@ class WindowHelperManager:
                 self.process.wait(timeout=3)
             except Exception:
                 pass
-
-# === MAIN FUNCTIONS ===
-# Note: get_active_window_info() is now replaced by .get_latest_window_info()
-# Initialize the manager once in your app, e.g., in main()
-
-def get_process_name(process_id: int) -> str:
-    """We already include process name in the helper output."""
-    return "N/A"  # (kept for interface compatibility)
-
 
 # === TESTERS ===
 def check_helper_dir() -> bool:
@@ -175,7 +169,7 @@ def test_window_helper(verbose: bool = True) -> bool:
     time.sleep(2)  # Allow time for initial fetch
 
     data = manager.get_latest_window_info()
-    expected_keys = {WindowInfo.NAME, WindowInfo.CLASS_NAME, WindowInfo.PROCESS_ID}
+    expected_keys = {WindowInfo.NAME, WindowInfo.CLASS_NAME, WindowInfo.PROCESS_ID, WindowInfo.PROCESS_NAME}
 
     if not all(key in data for key in expected_keys):
         if verbose:
@@ -185,7 +179,11 @@ def test_window_helper(verbose: bool = True) -> bool:
 
     if verbose:
         print("✅ Helper test passed.")
-        print(f"Active window: {data.get(WindowInfo.NAME)} (PID: {data.get(WindowInfo.PROCESS_ID)})")
+        print(
+            f"Active window: {data.get(WindowInfo.NAME)} "
+            f"(Process: {data.get(WindowInfo.PROCESS_NAME)}, "
+            f"PID: {data.get(WindowInfo.PROCESS_ID)})"
+        )
 
     manager.stop()
     return True

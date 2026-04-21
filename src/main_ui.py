@@ -1,10 +1,10 @@
 import flet as ft
 import asyncio
 from loader import load_app_lists, reset_config
-from window import get_process_name, WindowHelperManager
-from data_types import WindowInfo, AppType
+from window import WindowHelperManager
+from core.data_types import WindowInfo, AppType
 from utilities import safe_sleep, format_time
-from components import (exit_button, theme_button, minimize_button, preset_popup_menu_button, preset_appbar,
+from components import (ExitButton, theme_button, WindowMinimizeButton, preset_popup_menu_button, preset_appbar,
                         simple_popup_menu_item, fullscreen_button, loading_indicator, loading_screen_container,
                         DefaultText)
 from notifications import simple_notification, error_notif
@@ -29,11 +29,7 @@ async def main_ui(page: ft.Page):
     progress_ring = loading_indicator()
     loading_controls = loading_screen_container(loading_text, progress_ring)
     page.add(loading_controls)
-    page.appbar = preset_appbar(
-        title=title, actions=[
-            exit_button(page)
-        ]
-    )
+    page.appbar = preset_appbar(title=title, actions=[ExitButton()])
     
     await page.window.center()
     
@@ -116,7 +112,7 @@ async def main_ui(page: ft.Page):
         while not stop_event.is_set():
             # Run blocking call in a background thread with COM initialized
             info = await asyncio.to_thread(window_manager.get_latest_window_info)
-            category = classifier.classify(win_info=info, process_getter=get_process_name)
+            category = classifier.classify(info)
             title = info.get(WindowInfo.NAME) or "Unknown Window"
             if title != prev_title:
                 prev_title = title
@@ -138,8 +134,6 @@ async def main_ui(page: ft.Page):
     
     # | Controls |
     theme_btn = theme_button(page)
-    close_btn = exit_button(page, on_close)
-    minimize_btn = minimize_button(page)
     fullscreen_btn = fullscreen_button(page)
     
     popup_menu_item_fid = simple_popup_menu_item(
@@ -167,7 +161,7 @@ async def main_ui(page: ft.Page):
         actions=[
             theme_btn, popup_menu_btn,
             ft.Container(padding=8),
-            minimize_btn, fullscreen_btn, close_btn
+            WindowMinimizeButton(), fullscreen_btn, ExitButton(on_click=on_close)
         ]
     )
     
