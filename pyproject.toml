@@ -1,7 +1,7 @@
 [project]
 name = "ProductivityApp"
-version = "0.4.0"
-description = "An App for Checking Your Productivity"
+version = "0.5.0"
+description = "An App for Monitoring Your Productivity"
 readme = "README.md"
 requires-python = ">=3.13"
 authors = [{ name = "MetaDusk", email = "andredcxxv@gmail.com" }]

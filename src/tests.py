@@ -3,10 +3,10 @@ Quick test for WindowHelperManager lifecycle.
 Ensures the helper subprocess starts, retrieves data, and exits cleanly.
 """
 import time
-from window import WindowHelperManager
+from managers.window import WindowHelperManager
 
 
-def test():
+def test() -> None:
     print("🚀 Starting WindowHelperManager test...")
 
     manager = WindowHelperManager()

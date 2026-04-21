@@ -1,16 +1,20 @@
 import flet as ft
 import asyncio
-from loader import load_app_lists, reset_config
-from window import get_process_name, WindowHelperManager
-from data_types import WindowInfo, AppType
-from utilities import safe_sleep, format_time
-from components import (exit_button, theme_button, minimize_button, preset_popup_menu_button, preset_appbar,
-                        simple_popup_menu_item, fullscreen_button, loading_indicator, loading_screen_container,
-                        DefaultText)
-from notifications import simple_notification, error_notif
-from smart_classifier import SmartClassifier
-from layouts import preset_win_drag_area, preset_column
-from error_checking import check_app_integrity
+
+from managers.loader import load_app_lists, reset_config, log
+from managers.window import WindowHelperManager
+from core.utilities import safe_sleep, format_time
+from core.data_types import WindowInfo, AppType
+from components.layouts import PresetColumn, PresetWindowDragArea
+from components.appbar import PresetAppBar
+from components.buttons import (
+    ExitButton, MinimizeButton, PresetPopupMenuButton, SimplePopupMenuItem,
+    FullscreenButton, ThemeToggleButton)
+from components.text import DefaultText
+from components.loading_screen import LoadingIndicator, LoadingScreen
+from components.notifications import SimpleNotification, ErrorNotification
+from managers.error_checking import check_app_integrity
+from managers.smart_classifier import SmartClassifier
 
 
 # === MAIN FLET APP ===
@@ -23,17 +27,14 @@ async def main_ui(page: ft.Page):
     distraction_time: int = 0
     productive_time: int = 0
     loading_interval: float = 0.5
+    app_exiting: bool = False
     
     # Loading Controls
-    loading_text = DefaultText("Fixing Monitor Stretch...")
-    progress_ring = loading_indicator()
-    loading_controls = loading_screen_container(loading_text, progress_ring)
+    loading_text = DefaultText("Setting Up App...")
+    progress_ring = LoadingIndicator()
+    loading_controls = LoadingScreen(loading_text=loading_text, loading_indicator=progress_ring)
     page.add(loading_controls)
-    page.appbar = preset_appbar(
-        title=title, actions=[
-            exit_button(page)
-        ]
-    )
+    page.appbar = PresetAppBar(title=title, actions=[ExitButton()])
     
     await page.window.center()
     
@@ -48,9 +49,14 @@ async def main_ui(page: ft.Page):
     # | Event Handlers |
     async def on_close(_):
         """Handles window closing + animations."""
-        print("App is closing... Waiting for monitor to stop.")
-        if not stop_event.is_set():
-            stop_event.set()
+        nonlocal app_exiting
+        if app_exiting:
+            log("App closed.")
+            return
+        app_exiting = True
+        log("App is closing... Waiting for monitor to stop.")
+        page.show_dialog(SimpleNotification("Exiting the application..."))
+        if not stop_event.is_set(): stop_event.set()
         window_manager.stop()
         form.opacity = 0
         form.offset = ft.Offset(0, -1)
@@ -62,18 +68,16 @@ async def main_ui(page: ft.Page):
     
     async def on_event(e: ft.WindowEvent):
         match e.type:
-            case ft.WindowEventType.CLOSE:
-                await on_close(e)
-            case _:
-                # print(f"Window event -> {e.type}")
-                pass
+            case ft.WindowEventType.CLOSE: await on_close(e)
+            case _: pass
     
     def reset_config_btn_call(_):
         """Resets the config to its default values once called."""
         if reset_config():
-            simple_notification(page, "Successful reset of config file.", 1500)
+            notif = SimpleNotification("Successful reset of config file.", duration=1500)
         else:
-            error_notif(page, "Failed to reset config file!", 1500)
+            notif = ErrorNotification(text="Failed to reset config file!", duration=1500)
+        page.show_dialog(notif)
     
     
     # | Events |
@@ -85,7 +89,7 @@ async def main_ui(page: ft.Page):
                 productive_time += 1
                 productive_counter_text.spans[1].text = format_time(productive_time)
                 productive_counter_text.update()
-                print(f"Incremented productive_time to: {format_time(productive_time)}")
+                log(f"Incremented productive_time to: {format_time(productive_time)}")
                 await safe_sleep(1, stop_event)
             
             case AppType.DISTRACTING:
@@ -100,7 +104,7 @@ async def main_ui(page: ft.Page):
                 distraction_time += 1
                 distractions_counter_text.spans[1].text = format_time(distraction_time)
                 distractions_counter_text.update()
-                print(f"Incremented distraction_time to: {format_time(distraction_time)}")
+                log(f"Incremented distraction_time to: {format_time(distraction_time)}")
                 await safe_sleep(1, stop_event)
                 
             case AppType.NEUTRAL | _:
@@ -116,11 +120,11 @@ async def main_ui(page: ft.Page):
         while not stop_event.is_set():
             # Run blocking call in a background thread with COM initialized
             info = await asyncio.to_thread(window_manager.get_latest_window_info)
-            category = classifier.classify(win_info=info, process_getter=get_process_name)
+            category = classifier.classify(info)
             title = info.get(WindowInfo.NAME) or "Unknown Window"
             if title != prev_title:
                 prev_title = title
-                current_app_column: ft.Column = current_app.controls
+                current_app_column: ft.Column = current_app_col.controls
                 for ctrl in current_app_column:
                     if isinstance(ctrl, ft.Text) and ctrl.data == "editable_text":
                         current_app_text: ft.Text = ctrl
@@ -133,46 +137,47 @@ async def main_ui(page: ft.Page):
                 )
                 page.update()
             await match_app_type(category)
-        print("Monitor task stopped.")
+        log("Monitor task stopped.")
     
     
     # | Controls |
-    theme_btn = theme_button(page)
-    close_btn = exit_button(page, on_close)
-    minimize_btn = minimize_button(page)
-    fullscreen_btn = fullscreen_button(page)
-    
-    popup_menu_item_fid = simple_popup_menu_item(
+    popup_menu_item_fid = SimplePopupMenuItem(
         text="Fullscreen if Distracted", color=ft.Colors.TERTIARY,
         icon=ft.Icons.FULLSCREEN, checked=False
     )
-    popup_menu_item_csid = simple_popup_menu_item(
+    popup_menu_item_csid = SimplePopupMenuItem(
         text="Center Screen if Distracted", color=ft.Colors.TERTIARY,
         icon=ft.Icons.CENTER_FOCUS_STRONG, checked=True
     )
-    popup_menu_item_btfid = simple_popup_menu_item(
+    popup_menu_item_btfid = SimplePopupMenuItem(
         text="Bring to Front if Distracted", color=ft.Colors.TERTIARY,
         icon=ft.Icons.FLIP_TO_FRONT, checked=True
     )
-    popup_menu_btn = preset_popup_menu_button([
-        simple_popup_menu_item(
-            text="Reset Config Contents", icon=ft.Icons.FILE_OPEN_OUTLINED,
-            on_click=reset_config_btn_call,
-            color=ft.Colors.PRIMARY
-        ),
-        popup_menu_item_fid, popup_menu_item_csid, popup_menu_item_btfid
-    ])
-    appbar = preset_appbar(
+    popup_menu_btn = PresetPopupMenuButton(
+        new_menu_items=[
+            SimplePopupMenuItem(
+                text="Reset Config Contents", icon=ft.Icons.FILE_OPEN_OUTLINED,
+                on_click=reset_config_btn_call,
+            ),
+            popup_menu_item_fid, popup_menu_item_csid, popup_menu_item_btfid
+        ]
+    )
+    appbar = PresetAppBar(
         title = title,
         actions=[
-            theme_btn, popup_menu_btn,
+            ThemeToggleButton(), popup_menu_btn,
             ft.Container(padding=8),
-            minimize_btn, fullscreen_btn, close_btn
+            MinimizeButton(), FullscreenButton(), ExitButton(on_click=on_close)
         ]
     )
     
-    current_app = ft.Column(
-        controls=[ft.Text("Detecting active window...", size=16, weight=ft.FontWeight.BOLD, data="editable_text")],
+    current_app_col = ft.Column(
+        controls=[
+            ft.Text(
+                "Detecting active window...", size=16,
+                weight=ft.FontWeight.BOLD, data="editable_text"
+            )
+        ],
         scroll=ft.ScrollMode.ALWAYS, expand=True
     )
     category_text = ft.Text("Unknown", size=24, weight=ft.FontWeight.BOLD)
@@ -193,24 +198,24 @@ async def main_ui(page: ft.Page):
     
     
     # | Layouts |
-    controls = [
+    form_controls = [
         distractions_counter_text,
         productive_counter_text,
         ft.Divider(height=16),
         ft.Text("Current Window:", size=16),
-        current_app,
+        current_app_col,
         ft.Divider(height=16),
         ft.Text("Status:", size=16),
         category_text,
     ]
-    column = preset_column(controls)
-    container = ft.Container(
-        content=column,
-        padding=16, border_radius=16, expand=True,
-        bgcolor=ft.Colors.SURFACE_CONTAINER,
-        alignment=ft.Alignment.CENTER,
+    form = PresetWindowDragArea(
+        ft.Container(
+            content=PresetColumn(form_controls),
+            padding=16, border_radius=16, expand=True,
+            bgcolor=ft.Colors.SURFACE_CONTAINER,
+            alignment=ft.Alignment.CENTER,
+        )
     )
-    form = preset_win_drag_area(container)
     
     
     # | Page Stuff + Animation |
