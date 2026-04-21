@@ -8,7 +8,7 @@ class PresetAppBar(ft.AppBar):
     actions_padding: Optional[ft.PaddingValue] = 4
     title_spacing: Optional[ft.Number] = 4
     leading_width: Optional[ft.Number] = 8
-    leading: Optional[ft.Control] = field(default_factory=ft.Container())
+    leading: Optional[ft.Control] = field(default_factory=lambda: ft.Container())
     
     def init(self):
         text: str = "Home"

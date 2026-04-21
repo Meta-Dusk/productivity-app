@@ -3,7 +3,7 @@ import os
 from typing import Optional
 from dataclasses import field
 
-from loader import CONFIG_PATH, CONFIG_ROOT, LOG_FILE, LOG_DIR
+from managers.loader import CONFIG_PATH, CONFIG_ROOT, LOG_FILE, LOG_DIR
 
 
 # === PRESETS ===
@@ -68,6 +68,7 @@ class FullscreenButton(PrimaryIconButton):
 
 @ft.control
 class ThemeToggleButton(ft.AnimatedSwitcher):
+    content: ft.Control = field(default_factory=lambda: ft.Container())
     duration: ft.DurationValue = 500
     reverse_duration: ft.DurationValue = 200
     switch_in_curve: ft.AnimationCurve = ft.AnimationCurve.BOUNCE_OUT
@@ -75,9 +76,7 @@ class ThemeToggleButton(ft.AnimatedSwitcher):
     transition: ft.AnimatedSwitcherTransition = ft.AnimatedSwitcherTransition.SCALE
     
     def init(self):
-        self.content = PrimaryIconButton(
-            ft.Icons.DARK_MODE, on_click=self.swap_theme
-        )
+        self.content = PrimaryIconButton(ft.Icons.DARK_MODE, on_click=self.swap_theme)
     
     def did_mount(self):
         icon: ft.IconButton = self.content
@@ -89,7 +88,8 @@ class ThemeToggleButton(ft.AnimatedSwitcher):
         try: icon.update()
         except RuntimeError: pass
     
-    def swap_theme(e: ft.Event[ft.IconButton]):
+    def swap_theme(self, e: ft.Event[ft.IconButton]):
+        print(f"Clicked: {e}")
         if e.page.theme_mode == ft.ThemeMode.DARK:
             e.page.theme_mode = ft.ThemeMode.LIGHT
             e.control.icon = ft.Icons.LIGHT_MODE
@@ -105,10 +105,15 @@ class SimplePopupMenuItem(ft.PopupMenuItem):
     color: ft.ColorValue = ft.Colors.PRIMARY
     
     def init(self) -> None:
-        self.on_click = self._on_click
+        if self.on_click is None:
+            self.on_click = self._on_click
         self.content = ft.Text(self.text, color=self.color)
+        
+        if not self.icon: return
         if isinstance(self.icon, ft.Icon):
             self.icon.color = self.color
+        else:
+            self.icon = ft.Icon(self.icon, self.color)
     
     def _on_click(self, e: ft.Event[ft.PopupMenuItem]) -> None:
         e.control.checked = e.data
@@ -132,8 +137,7 @@ class PresetPopupMenuButton(ft.PopupMenuButton):
             ),
             SimplePopupMenuItem(
                 text="Open Config Directory", icon=ft.Icons.FOLDER_OPEN,
-                on_click=lambda _: os.startfile(CONFIG_ROOT),
-                color=ft.Colors.PRIMARY
+                on_click=lambda _: os.startfile(CONFIG_ROOT)
             ),
             *self.new_menu_items,
             SimplePopupMenuItem(

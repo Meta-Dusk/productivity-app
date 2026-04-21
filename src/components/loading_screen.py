@@ -2,6 +2,8 @@ import flet as ft
 from typing import Optional
 from dataclasses import field
 
+from components.layouts import CenteredColumn
+
 @ft.control
 class LoadingIndicator(ft.ProgressRing):
     color: Optional[ft.ColorValue] = ft.Colors.PRIMARY
@@ -11,18 +13,17 @@ class LoadingIndicator(ft.ProgressRing):
 
 @ft.control
 class LoadingScreen(ft.WindowDragArea):
-    maximizable: bool = False
-    expand: Optional[bool | int] = True
-    loading_text: ft.Text = field(default_factory=ft.Text("Loading..."))
+    content: ft.Control = field(default_factory=lambda: ft.Container())
+    loading_text: ft.Text = field(default_factory=lambda: ft.Text("Loading..."))
+    loading_indicator: ft.ProgressRing = field(default_factory=lambda: LoadingIndicator())
     
     def init(self):
         self.content = ft.Container(
-            ft.Column(
-                controls=[self.loading_text, LoadingIndicator()],
-                alignment=ft.MainAxisAlignment.CENTER,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            CenteredColumn(
+                controls=[self.loading_text, self.loading_indicator],
                 spacing=16, run_alignment=16
             ),
-            expand=True, alignment=ft.Alignment.CENTER,
-            padding=8
+            expand=True, alignment=ft.Alignment.CENTER, padding=8
         )
+        self.maximizable = False
+        self.expand = True
